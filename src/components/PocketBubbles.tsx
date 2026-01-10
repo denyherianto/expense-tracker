@@ -176,7 +176,7 @@ export function PocketBubbles({ pockets }: PocketBubblesProps) {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
             <DialogHeader>
-            <DialogTitle>Buat Pocket Baru</DialogTitle>
+            <DialogTitle>Buat Kantung Baru</DialogTitle>
             </DialogHeader>
             <div className="py-2">
             <Label>Nama</Label>

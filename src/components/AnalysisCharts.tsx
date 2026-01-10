@@ -38,7 +38,7 @@ export function AnalysisCharts({ data }: { data: ChartData }) {
                                     tickFormatter={(value) => `Rp${value / 1000}k`}
                                 />
                                 <Tooltip
-                                    formatter={(value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)}
+                                    formatter={(value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(value ?? 0))}
                                     cursor={{ fill: 'transparent' }}
                                 />
                                 <Bar dataKey="total" fill="currentColor" radius={[4, 4, 0, 0]} className="fill-primary" />
@@ -71,7 +71,7 @@ export function AnalysisCharts({ data }: { data: ChartData }) {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)}
+                                    formatter={(value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(value ?? 0))}
                                 />
                             </PieChart>
                         </ResponsiveContainer>

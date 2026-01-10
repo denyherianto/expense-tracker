@@ -148,7 +148,7 @@ export default function AddInvoicePage() {
       {pockets.length === 0 ? (
         <Link href="/" className="block">
           <Button variant="outline" className="w-full border-dashed">
-            <Plus className="mr-2 h-4 w-4" /> Buat Pocket Baru
+            <Plus className="mr-2 h-4 w-4" /> Buat Kantung Baru
           </Button>
         </Link>
       ) : (

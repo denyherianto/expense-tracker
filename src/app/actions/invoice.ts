@@ -6,7 +6,7 @@ import { and, eq } from 'drizzle-orm';
 import { openai, modelName } from '@/lib/openai';
 import { InvoiceSchema } from '@/lib/openai';
 import { db } from '@/db';
-import { invoices, items } from '@/db/schema';
+import { invoices, items, pockets } from '@/db/schema';
 import { revalidatePath } from 'next/cache';
 
 // ... (existing imports)
@@ -117,7 +117,7 @@ export async function processInvoice(formData: FormData) {
         if (existing) {
             finalPocketId = existing.id;
         } else {
-             const [newP] = await db.insert(require('@/db/schema').pockets).values({
+          const [newP] = await db.insert(pockets).values({
                 name: 'Personal',
                userId: userId
              }).returning();

@@ -118,7 +118,7 @@ export default async function DashboardPage({
         {recentInvoices.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm border border-dashed rounded-xl bg-muted/30">
             <Receipt className="mx-auto h-8 w-8 mb-3 opacity-50" />
-            <p>Belum ada transaksi {params.pocketId ? 'di pocket ini' : 'bulan ini'}.</p>
+            <p>Belum ada transaksi {params.pocketId ? 'di Kantung ini' : 'bulan ini'}.</p>
             <div className="mt-4">
               <Link href="/add">
                 <Button variant="outline" size="sm">Tambah Transaksi</Button>
@@ -128,7 +128,7 @@ export default async function DashboardPage({
         ) : (
           recentInvoices.map((invoice) => (
             <Link href={`/invoices/${invoice.id}`} key={invoice.id}>
-              <Card className="hover:bg-muted/50 transition-colors border-border/60 shadow-none mb-2">
+              <Card className="hover:bg-muted/50 transition-colors border-border/60 shadow-none mb-2 !py-0">
                 <CardContent className="p-4 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border shrink-0">
