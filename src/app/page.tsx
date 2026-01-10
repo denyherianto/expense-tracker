@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { invoices } from '@/db/schema';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { desc, gte, eq, and, sql } from 'drizzle-orm';
+import { desc, gte, eq, and, sql, or, inArray } from 'drizzle-orm';
 import { formatIDR } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -24,16 +24,27 @@ async function getDashboardData(pocketId?: string) {
 
   const userId = session.user.id;
 
-  const whereClause = pocketId
-    ? and(gte(invoices.date, firstDayOfMonth), eq(invoices.pocketId, pocketId), eq(invoices.userId, userId))
-    : and(gte(invoices.date, firstDayOfMonth), eq(invoices.userId, userId));
+  // Fetch accessible pockets first to determine visibility
+  const availablePockets = await getPockets();
+  const accessiblePocketIds = availablePockets.map(p => p.id);
 
-  const recentWhere = pocketId
-    ? and(eq(invoices.pocketId, pocketId), eq(invoices.userId, userId))
+  // Visibility Logic: 
+  // 1. Own invoices
+  // 2. Invoices in pockets I am a member of
+  const visibilityFilter = accessiblePocketIds.length > 0
+    ? or(eq(invoices.userId, userId), inArray(invoices.pocketId, accessiblePocketIds))
     : eq(invoices.userId, userId);
 
-  // Parallel fetching
-  const [recentInvoices, totalMonthSpendResult, availablePockets] = await Promise.all([
+  const whereClause = pocketId
+    ? and(gte(invoices.date, firstDayOfMonth), eq(invoices.pocketId, pocketId), visibilityFilter)
+    : and(gte(invoices.date, firstDayOfMonth), visibilityFilter);
+
+  const recentWhere = pocketId
+    ? and(eq(invoices.pocketId, pocketId), visibilityFilter)
+    : visibilityFilter;
+
+  // Parallel fetching for invoices and stats
+  const [recentInvoices, totalMonthSpendResult] = await Promise.all([
     db.query.invoices.findMany({
       limit: 5,
       orderBy: [desc(invoices.date), desc(invoices.createdAt)],
@@ -43,7 +54,6 @@ async function getDashboardData(pocketId?: string) {
     db.select({ value: sql<string>`sum(${invoices.totalAmount})` })
       .from(invoices)
       .where(whereClause),
-    getPockets(),
   ]);
 
   return {
@@ -149,7 +159,7 @@ export default async function DashboardPage({
           <LayoutDashboard className="h-6 w-6" />
           <span className="text-[10px] font-medium">Beranda</span>
         </Link>
-        <Link href="/add" className="mb-8">
+        <Link href="/add" className="mb-10">
           <div className="bg-primary text-primary-foreground rounded-full h-14 w-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95">
             <Plus className="h-7 w-7" />
           </div>

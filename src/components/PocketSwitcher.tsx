@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SharePocketDialog } from '@/components/SharePocketDialog';
 
 interface Pocket {
   id: string;
@@ -27,19 +28,26 @@ export function PocketSwitcher({ pockets }: PocketSwitcherProps) {
     router.push(`?${params.toString()}`);
   }
 
+  const selectedPocket = pockets.find(p => p.id === currentPocketId);
+
   return (
-    <Select value={currentPocketId} onValueChange={handleValueChange}>
-      <SelectTrigger className="w-[180px] h-8 text-xs font-medium bg-background/50 border-input/50 backdrop-blur">
-        <SelectValue placeholder="Semua Pocket" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Semua Pocket</SelectItem>
-        {pockets.map((pocket) => (
-          <SelectItem key={pocket.id} value={pocket.id}>
-            {pocket.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="flex items-center gap-2">
+      <Select value={currentPocketId} onValueChange={handleValueChange}>
+        <SelectTrigger className="w-[180px] h-8 text-xs font-medium bg-background/50 border-input/50 backdrop-blur">
+          <SelectValue placeholder="Semua Pocket" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Semua Pocket</SelectItem>
+          {pockets.map((pocket) => (
+            <SelectItem key={pocket.id} value={pocket.id}>
+              {pocket.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {selectedPocket && (
+        <SharePocketDialog pocketId={selectedPocket.id} pocketName={selectedPocket.name} />
+      )}
+    </div>
   );
 }

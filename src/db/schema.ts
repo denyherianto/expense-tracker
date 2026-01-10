@@ -79,6 +79,13 @@ export const items = pgTable('items', {
   category: text('category').notNull(),
 });
 
+export const pocketMembers = pgTable('pocket_members', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  pocketId: uuid('pocket_id').notNull().references(() => pockets.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // --- Relations ---
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -86,12 +93,25 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   pockets: many(pockets),
   invoices: many(invoices),
+  sharedPockets: many(pocketMembers),
 }));
 
 export const pocketsRelations = relations(pockets, ({ many, one }) => ({
   invoices: many(invoices),
   owner: one(user, {
     fields: [pockets.userId],
+    references: [user.id],
+  }),
+  members: many(pocketMembers),
+}));
+
+export const pocketMembersRelations = relations(pocketMembers, ({ one }) => ({
+  pocket: one(pockets, {
+    fields: [pocketMembers.pocketId],
+    references: [pockets.id],
+  }),
+  user: one(user, {
+    fields: [pocketMembers.userId],
     references: [user.id],
   }),
 }));

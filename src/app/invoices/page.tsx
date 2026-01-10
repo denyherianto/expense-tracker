@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { invoices } from '@/db/schema';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { desc, ilike, or, and, eq } from 'drizzle-orm';
+import { desc, ilike, or, and, eq, inArray } from 'drizzle-orm';
 import { formatIDR } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,18 +29,25 @@ export default async function InvoicesPage({
 
   if (!session) return null; // Or redirect handled by middleware
 
-  const [allInvoices, pockets] = await Promise.all([
-    db.query.invoices.findMany({
+  const userId = session.user.id;
+
+  // Fetch accessible pockets first
+  const pockets = await getPockets();
+  const accessiblePocketIds = pockets.map(p => p.id);
+
+  const visibilityFilter = accessiblePocketIds.length > 0
+    ? or(eq(invoices.userId, userId), inArray(invoices.pocketId, accessiblePocketIds))
+    : eq(invoices.userId, userId);
+
+  const allInvoices = await db.query.invoices.findMany({
       where: and(
         query ? or(ilike(invoices.summary, `%${query}%`)) : undefined,
         pocketId ? eq(invoices.pocketId, pocketId) : undefined,
-        eq(invoices.userId, session.user.id) // Filter by user
+        visibilityFilter
       ),
       with: { items: true, pocket: true },
       orderBy: [desc(invoices.date), desc(invoices.createdAt)],
-    }),
-    getPockets(),
-  ]);
+  });
 
   return (
     <div className="container max-w-md mx-auto p-4 min-h-screen font-sans">

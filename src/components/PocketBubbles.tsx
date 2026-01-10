@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { useState, useRef } from 'react';
 import { createPocket, renamePocket, deletePocket } from '@/app/actions/pockets';
 import { toast } from 'sonner';
-import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Plus, MoreHorizontal, Pencil, Trash2, Users } from 'lucide-react';
+import { SharePocketDialog } from '@/components/SharePocketDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +36,9 @@ export function PocketBubbles({ pockets }: PocketBubblesProps) {
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [pocketToEdit, setPocketToEdit] = useState<Pocket | null>(null);
+  const [pocketToShare, setPocketToShare] = useState<Pocket | null>(null);
   const [newName, setNewName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -102,6 +105,11 @@ export function PocketBubbles({ pockets }: PocketBubblesProps) {
     setIsEditOpen(true);
   };
 
+  const openShare = (pocket: Pocket) => {
+    setPocketToShare(pocket);
+    setIsShareOpen(true);
+  };
+
   return (
     <div className="w-full overflow-x-auto pb-2 scrollbar-hide" ref={scrollContainerRef}>
       <div className="flex space-x-2">
@@ -138,6 +146,9 @@ export function PocketBubbles({ pockets }: PocketBubblesProps) {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openShare(pocket); }}>
+                    <Users className="mr-2 h-3 w-3" /> Bagikan
+                  </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(pocket); }}>
                     <Pencil className="mr-2 h-3 w-3" /> Ubah Nama
                         </DropdownMenuItem>
@@ -202,6 +213,16 @@ export function PocketBubbles({ pockets }: PocketBubblesProps) {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Share Dialog */}
+      {pocketToShare && (
+        <SharePocketDialog
+          open={isShareOpen}
+          onOpenChange={setIsShareOpen}
+          pocketId={pocketToShare.id}
+          pocketName={pocketToShare.name}
+        />
+      )}
 
     </div>
   );
