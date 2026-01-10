@@ -3,10 +3,13 @@ import type { Session } from "better-auth/types";
 import { NextResponse, type NextRequest } from "next/server";
 
 export default async function authMiddleware(request: NextRequest) {
+  // Use internal URL for API calls to avoid SSL issues with reverse proxies
+  const internalUrl = process.env.INTERNAL_URL || request.nextUrl.origin;
+
   const { data: session } = await betterFetch<Session>(
     "/api/auth/get-session",
     {
-      baseURL: request.nextUrl.origin,
+      baseURL: internalUrl,
       headers: {
         //get the cookie from the request
         cookie: request.headers.get("cookie") || "",
