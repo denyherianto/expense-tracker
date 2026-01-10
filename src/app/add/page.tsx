@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Loader2, Camera, Type, Plus } from 'lucide-react';
+import { Loader2, Camera, Type, Plus, Mic, StopCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { processInvoice } from '@/app/actions/invoice';
 import { getPockets } from '@/app/actions/pockets';
@@ -38,8 +38,61 @@ export default function AddInvoicePage() {
     });
   }, []);
 
+  const [text, setText] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).webkitSpeechRecognition) {
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.continuous = false; // Stop after one sentence
+      recognition.interimResults = true;
+      recognition.lang = 'id-ID';
+
+      recognition.onresult = (event: any) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setText((prev) => prev + (prev ? ' ' : '') + finalTranscript);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognition);
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognition) {
+      toast.error('Browser Anda tidak mendukung input suara.');
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      // State change will happen in onend
+    } else {
+      try {
+        recognition.start();
+        setIsListening(true);
+        toast.info('Mendengarkan... (Bicara sekarang)');
+      } catch (e) {
+        console.error(e);
+        setIsListening(false);
+      }
+    }
+  };
+
   async function handleTextSubmit(formData: FormData) {
     formData.append('pocketId', selectedPocketId);
+    // Ensure the state text is used if formData doesn't pick it up automatically (controlled input usually ensures it's in DOM, but safer to sync)
     
     setIsPending(true);
     const promise = processInvoice(formData);
@@ -123,7 +176,6 @@ export default function AddInvoicePage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold">Tambah Transaksi</h1>
-            {/* <p className="text-sm text-muted-foreground">Record your expenses instantly.</p> */}
         </div>
       </div>
 
@@ -134,8 +186,9 @@ export default function AddInvoicePage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="text" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="text"><Type className="w-4 h-4 mr-2" /> Teks</TabsTrigger>
+              <TabsTrigger value="voice"><Mic className="w-4 h-4 mr-2" /> Suara</TabsTrigger>
               <TabsTrigger value="camera"><Camera className="w-4 h-4 mr-2" /> Kamera</TabsTrigger>
             </TabsList>
             
@@ -151,6 +204,48 @@ export default function AddInvoicePage() {
                     className="min-h-[150px] text-lg resize-none"
                     required
                   />
+                </div>
+                <Button type="submit" className="w-full h-12 text-base" disabled={isPending}>
+                  {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Memproses...</> : 'Proses Transaksi'}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="voice">
+              <form action={handleTextSubmit} className="space-y-4">
+                <PocketSelector />
+                <div className="space-y-4">
+                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl bg-muted/30">
+                    <Button
+                      type="button"
+                      variant={isListening ? "destructive" : "default"}
+                      size="lg"
+                      onClick={toggleListening}
+                      className={`h-16 w-16 rounded-full shadow-lg mb-4 ${isListening ? 'animate-pulse' : ''}`}
+                    >
+                      {isListening ? (
+                        <StopCircle className="h-8 w-8" />
+                      ) : (
+                        <Mic className="h-8 w-8" />
+                      )}
+                    </Button>
+                    <p className="text-sm font-medium text-muted-foreground text-center">
+                      {isListening ? 'Mendengarkan... (Ketuk untuk berhenti)' : 'Ketuk mikrofon untuk mulai bicara'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="voiceText">Hasil Suara</Label>
+                    <Textarea
+                      id="voiceText"
+                      name="rawText"
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder="Hasil suara akan muncul di sini..."
+                      className="min-h-[100px] text-lg resize-none"
+                      required
+                    />
+                  </div>
                 </div>
                 <Button type="submit" className="w-full h-12 text-base" disabled={isPending}>
                   {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Memproses...</> : 'Proses Transaksi'}
