@@ -182,13 +182,21 @@ export async function deleteInvoice(id: string) {
 
     const userId = session.user.id;
 
-    // Verify ownership
+    // Verify ownership (Creator OR Pocket Owner)
     const invoice = await db.query.invoices.findFirst({
-      where: and(eq(invoices.id, id), eq(invoices.userId, userId))
+      where: eq(invoices.id, id),
+      with: { pocket: true }
     });
 
     if (!invoice) {
-      throw new Error("Invoice not found or unauthorized");
+      throw new Error("Invoice not found");
+    }
+
+    const isCreator = invoice.userId === userId;
+    const isPocketOwner = invoice.pocket?.userId === userId;
+
+    if (!isCreator && !isPocketOwner) {
+      throw new Error("Unauthorized to delete this invoice");
     }
 
     // Delete items first (cascade should handle this but explicit is safer/clearer if no cascade)
