@@ -1,5 +1,7 @@
 import { db } from '@/db';
 import { invoices } from '@/db/schema';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import { desc, gte, eq, and, sql } from 'drizzle-orm';
 import { formatIDR } from '@/lib/utils';
 import Link from 'next/link';
@@ -9,16 +11,26 @@ import { format } from 'date-fns';
 import { PocketBubbles } from '@/components/PocketBubbles';
 import { getPockets } from '@/app/actions/pockets';
 import { LayoutDashboard, Plus, BarChart3, ArrowRight, Receipt } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 async function getDashboardData(pocketId?: string) {
   const now = new Date();
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const whereClause = pocketId
-    ? and(gte(invoices.date, firstDayOfMonth), eq(invoices.pocketId, pocketId))
-    : gte(invoices.date, firstDayOfMonth);
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+  if (!session) return { recentInvoices: [], totalMonthSpend: 0, pockets: [], user: null };
 
-  const recentWhere = pocketId ? eq(invoices.pocketId, pocketId) : undefined;
+  const userId = session.user.id;
+
+  const whereClause = pocketId
+    ? and(gte(invoices.date, firstDayOfMonth), eq(invoices.pocketId, pocketId), eq(invoices.userId, userId))
+    : and(gte(invoices.date, firstDayOfMonth), eq(invoices.userId, userId));
+
+  const recentWhere = pocketId
+    ? and(eq(invoices.pocketId, pocketId), eq(invoices.userId, userId))
+    : eq(invoices.userId, userId);
 
   // Parallel fetching
   const [recentInvoices, totalMonthSpendResult, availablePockets] = await Promise.all([
@@ -38,6 +50,7 @@ async function getDashboardData(pocketId?: string) {
     recentInvoices,
     totalMonthSpend: Number(totalMonthSpendResult[0]?.value || 0),
     pockets: availablePockets,
+    user: session.user,
   };
 }
 
@@ -47,8 +60,9 @@ export default async function DashboardPage({
   searchParams: Promise<{ pocketId?: string }>;
 }) {
   const params = await searchParams;
-  const { recentInvoices, totalMonthSpend, pockets } = await getDashboardData(params.pocketId);
-  const currentMonthName = format(new Date(), 'MMMM yyyy');
+  const { recentInvoices, totalMonthSpend, pockets, user } = await getDashboardData(params.pocketId);
+
+  if (!user) return null; // Should be handled by middleware, but for safety
 
   return (
     <div className="container max-w-md mx-auto p-4 min-h-screen pb-24 font-sans">
@@ -58,9 +72,12 @@ export default async function DashboardPage({
             <h1 className="text-2xl font-bold tracking-tight">Ringkasan</h1>
             <p className="text-sm text-muted-foreground">{format(new Date(), 'MMMM yyyy', { locale: require('date-fns/locale').id })}</p>
           </div>
-          {/* <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                 <span className="font-semibold text-xs text-muted-foreground">DH</span>
-            </div> */}
+          <Link href="/profile">
+            <Avatar className="h-9 w-9 border cursor-pointer hover:opacity-80 transition-opacity">
+              <AvatarImage src={user.image || ''} alt={user.name} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Link>
         </div>
         <PocketBubbles pockets={pockets} totalSpend={totalMonthSpend} />
       </header>

@@ -13,6 +13,13 @@ import { processInvoice } from '@/app/actions/invoice';
 import { getPockets } from '@/app/actions/pockets';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AddInvoicePage() {
   const [isPending, setIsPending] = useState(false);
@@ -84,28 +91,27 @@ export default function AddInvoicePage() {
 
   const PocketSelector = () => (
     <div className="space-y-2">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Pocket</label>
-        <div className="flex flex-wrap gap-2">
-            {pockets.length === 0 ? (
-                 <Link href="/pockets" className="w-full">
-                    <Button variant="outline" className="w-full border-dashed">
-              <Plus className="mr-2 h-4 w-4" /> Buat Pocket Baru
-                    </Button>
-                 </Link>
-            ) : (
-                pockets.map(p => (
-                    <Button
-                        key={p.id}
-                        type="button"
-                        variant={selectedPocketId === p.id ? 'default' : 'outline'}
-                        onClick={() => setSelectedPocketId(p.id)}
-                        className="flex-1 min-w-[30%] capitalize"
-                    >
-                        {p.name}
-                    </Button>
-                ))
-            )}
-        </div>
+      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Pocket</label>
+      {pockets.length === 0 ? (
+        <Link href="/" className="block">
+          <Button variant="outline" className="w-full border-dashed">
+            <Plus className="mr-2 h-4 w-4" /> Buat Pocket Baru
+          </Button>
+        </Link>
+      ) : (
+          <Select value={selectedPocketId} onValueChange={setSelectedPocketId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Pilih Pocket" />
+            </SelectTrigger>
+            <SelectContent>
+              {pockets.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 

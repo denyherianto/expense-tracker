@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { notFound } from 'next/navigation';
 
 import { ArrowLeft } from 'lucide-react';
+import { DeleteInvoiceButton } from '@/components/DeleteInvoiceButton';
 
 export default async function InvoiceDetailPage({
   params,
@@ -82,7 +83,7 @@ export default async function InvoiceDetailPage({
       </Card>
       
       <div className="flex justify-center">
-         <Button variant="destructive" size="sm" className="w-full" disabled>Delete Invoice (Coming Soon)</Button>
+        <DeleteInvoiceButton id={invoice.id} />
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import { db } from '@/db';
 import { invoices } from '@/db/schema';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import { desc, ilike, or, and, eq } from 'drizzle-orm';
 import { formatIDR } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,11 +23,18 @@ export default async function InvoicesPage({
   const query = params.q || '';
   const pocketId = params.pocketId;
   
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!session) return null; // Or redirect handled by middleware
+
   const [allInvoices, pockets] = await Promise.all([
     db.query.invoices.findMany({
       where: and(
         query ? or(ilike(invoices.summary, `%${query}%`)) : undefined,
-        pocketId ? eq(invoices.pocketId, pocketId) : undefined
+        pocketId ? eq(invoices.pocketId, pocketId) : undefined,
+        eq(invoices.userId, session.user.id) // Filter by user
       ),
       with: { items: true, pocket: true },
       orderBy: [desc(invoices.date), desc(invoices.createdAt)],

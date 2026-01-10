@@ -13,3 +13,18 @@ export const openai = new OpenAI({
 });
 
 export const modelName = process.env.OPENAI_MODEL || "gpt-4o";
+
+import { z } from "zod";
+
+export const InvoiceSchema = z.object({
+  summary: z.string(),
+  date: z.string(),
+  totalAmount: z.number(),
+  items: z.array(z.object({
+    name: z.string(),
+    quantity: z.number(),
+    unitPrice: z.number(),
+    totalPrice: z.number(),
+    category: z.string(),
+  })),
+});

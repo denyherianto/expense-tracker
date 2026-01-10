@@ -1,5 +1,7 @@
 import { db } from '@/db';
 import { invoices } from '@/db/schema';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import { AnalysisCharts } from '@/components/AnalysisCharts';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -15,9 +17,15 @@ async function getAnalysisData(pocketId?: string) {
   const startOfPeriod = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfPeriod = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+  if (!session) return { periodData: [], categoryData: [], itemData: [], pockets: [] };
+  const userId = session.user.id;
+
     const whereClause = pocketId
-      ? and(gte(invoices.date, startOfPeriod), lte(invoices.date, endOfPeriod), eq(invoices.pocketId, pocketId))
-      : and(gte(invoices.date, startOfPeriod), lte(invoices.date, endOfPeriod));
+      ? and(gte(invoices.date, startOfPeriod), lte(invoices.date, endOfPeriod), eq(invoices.pocketId, pocketId), eq(invoices.userId, userId))
+      : and(gte(invoices.date, startOfPeriod), lte(invoices.date, endOfPeriod), eq(invoices.userId, userId));
 
   // Daily Spending
   const dailyData = await db.select({
@@ -36,6 +44,7 @@ async function getAnalysisData(pocketId?: string) {
         FROM items i
         JOIN invoices inv ON i.invoice_id = inv.id
         WHERE inv.date >= ${startOfPeriod} AND inv.date <= ${endOfPeriod}
+        AND inv.user_id = ${userId}
         ${pocketId ? sql`AND inv.pocket_id = ${pocketId}` : sql``}
         GROUP BY i.category
         ORDER BY amount DESC
@@ -47,6 +56,7 @@ async function getAnalysisData(pocketId?: string) {
         FROM items i
         JOIN invoices inv ON i.invoice_id = inv.id
         WHERE inv.date >= ${startOfPeriod} AND inv.date <= ${endOfPeriod}
+        AND inv.user_id = ${userId}
         ${pocketId ? sql`AND inv.pocket_id = ${pocketId}` : sql``}
         GROUP BY i.name
         ORDER BY amount DESC

@@ -1,38 +1,30 @@
 'use server';
 
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { and, eq } from 'drizzle-orm';
 import { openai, modelName } from '@/lib/openai';
+import { InvoiceSchema } from '@/lib/openai';
 import { db } from '@/db';
 import { invoices, items } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 
-// Schema for structured output
-const InvoiceItemSchema = z.object({
-  name: z.string(),
-  quantity: z.number(),
-  unitPrice: z.number(),
-  totalPrice: z.number(),
-  category: z.enum([
-    'Sembako',
-    'Makan & Minum',
-    'Transportasi',
-    'Utilitas',
-    'Hiburan',
-    'Kesehatan',
-    'Lain-lain',
-  ]),
-});
-
-const InvoiceSchema = z.object({
-  summary: z.string().describe('A short summary of the invoice, e.g. "Lunch at McD" or "Weekly Groceries"'),
-  date: z.string().describe('ISO 8601 date string (YYYY-MM-DD)'),
-  totalAmount: z.number(),
-  items: z.array(InvoiceItemSchema),
-});
+// ... (existing imports)
 
 export async function processInvoice(formData: FormData) {
   try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+
+    const userId = session.user.id;
+
+    // ... (existing form processing)
+
     const rawText = formData.get('rawText') as string | null;
     const file = formData.get('file') as File | null;
 
@@ -120,14 +112,14 @@ export async function processInvoice(formData: FormData) {
     if (!finalPocketId) {
         // Fallback logic
         const existing = await db.query.pockets.findFirst({
-            where: (pockets, { eq }) => eq(pockets.name, 'Personal') 
+          where: (pockets, { eq }) => and(eq(pockets.name, 'Personal'), eq(pockets.userId, userId))
         });
         if (existing) {
             finalPocketId = existing.id;
         } else {
              const [newP] = await db.insert(require('@/db/schema').pockets).values({
                 name: 'Personal',
-                userId: 'demo-user'
+               userId: userId
              }).returning();
              finalPocketId = newP.id;
         }
@@ -136,7 +128,7 @@ export async function processInvoice(formData: FormData) {
     // Save to Database
     const invoice = await db.transaction(async (tx) => {
         const [newInvoice] = await tx.insert(invoices).values({
-            userId: 'demo-user', // Hardcoded for MVP
+          userId: userId, 
             summary: result.summary,
             date: new Date(result.date),
             totalAmount: result.totalAmount.toString(),
@@ -174,6 +166,44 @@ export async function processInvoice(formData: FormData) {
     return { success: true, data: invoice };
   } catch (error) {
     console.error('Error processing invoice:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+export async function deleteInvoice(id: string) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+
+    const userId = session.user.id;
+
+    // Verify ownership
+    const invoice = await db.query.invoices.findFirst({
+      where: and(eq(invoices.id, id), eq(invoices.userId, userId))
+    });
+
+    if (!invoice) {
+      throw new Error("Invoice not found or unauthorized");
+    }
+
+    // Delete items first (cascade should handle this but explicit is safer/clearer if no cascade)
+    await db.delete(items).where(eq(items.invoiceId, id));
+
+    // Delete invoice
+    await db.delete(invoices).where(eq(invoices.id, id));
+
+    revalidatePath('/');
+    revalidatePath('/invoices');
+    revalidatePath('/analysis');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting invoice:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
