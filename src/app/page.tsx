@@ -129,8 +129,8 @@ export default async function DashboardPage({
             <Link href={`/invoices/${invoice.id}`} key={invoice.id}>
               <Card className="hover:bg-muted/50 transition-colors rounded-md shadow-none mb-2 !py-0">
                 <CardContent className="p-4 flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="overflow-hidden w-full">
                       <div className="font-medium text-sm truncate pr-4">{invoice.summary}</div>
                       <div className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <span>{formatDate(invoice.date, { day: '2-digit', month: 'short' })}</span>
