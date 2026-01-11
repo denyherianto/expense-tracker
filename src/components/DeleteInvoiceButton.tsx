@@ -44,7 +44,7 @@ export function DeleteInvoiceButton({ id }: { id: string }) {
             <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" className="w-full flex items-center gap-2" disabled={isDeleting}>
                     <Trash2 className="h-4 w-4" />
-                    {isDeleting ? "Deleting..." : "Delete Invoice"}
+                    {isDeleting ? "Menghapus..." : "Hapus Transaksi"}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>

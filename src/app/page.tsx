@@ -3,14 +3,13 @@ import { invoices } from '@/db/schema';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { desc, gte, eq, and, sql, or, inArray } from 'drizzle-orm';
-import { formatIDR } from '@/lib/utils';
+import { formatIDR, formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { format } from 'date-fns';
+import { House, Plus, FileChartColumn, ArrowRight, Receipt } from 'lucide-react';
 import { PocketBubbles } from '@/components/PocketBubbles';
 import { getPockets } from '@/app/actions/pockets';
-import { LayoutDashboard, Plus, BarChart3, ArrowRight, Receipt } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 async function getDashboardData(pocketId?: string) {
@@ -80,7 +79,7 @@ export default async function DashboardPage({
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Ringkasan</h1>
-            <p className="text-sm text-muted-foreground">{format(new Date(), 'MMMM yyyy', { locale: require('date-fns/locale').id })}</p>
+            <p className="text-sm text-muted-foreground">{formatDate(new Date(), { month: 'long', year: 'numeric' })}</p>
           </div>
           <Link href="/profile">
             <Avatar className="h-9 w-9 border cursor-pointer hover:opacity-80 transition-opacity">
@@ -101,7 +100,7 @@ export default async function DashboardPage({
         <CardContent>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
-            Diperbarui {format(new Date(), 'HH:mm')}
+            Diperbarui {formatDate(new Date(), { hour: '2-digit', minute: '2-digit', hour12: false })}
           </div>
         </CardContent>
       </Card>
@@ -128,16 +127,13 @@ export default async function DashboardPage({
         ) : (
           recentInvoices.map((invoice) => (
             <Link href={`/invoices/${invoice.id}`} key={invoice.id}>
-              <Card className="hover:bg-muted/50 transition-colors border-border/60 shadow-none mb-2 !py-0">
+              <Card className="hover:bg-muted/50 transition-colors rounded-md shadow-none mb-2 !py-0">
                 <CardContent className="p-4 flex justify-between items-center">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border shrink-0">
-                      <Receipt className="h-5 w-5 text-muted-foreground" />
-                    </div>
                     <div className="overflow-hidden">
                       <div className="font-medium text-sm truncate pr-4">{invoice.summary}</div>
                       <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <span>{format(new Date(invoice.date), 'dd MMM')}</span>
+                        <span>{formatDate(invoice.date, { day: '2-digit', month: 'short' })}</span>
                         <span className="text-[10px] text-muted-foreground/50">•</span>
                         <span className="capitalize">{invoice.pocket?.name}</span>
                       </div>
@@ -156,7 +152,7 @@ export default async function DashboardPage({
       {/* Bottom Nav - Glassmorphism & Lucide Icons */}
       <div className="fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-md pb-safe pt-2 px-6 flex justify-between items-end h-[85px] max-w-md mx-auto z-50">
         <Link href="/" className="flex flex-col items-center gap-1 text-primary w-16 mb-6">
-          <LayoutDashboard className="h-6 w-6" />
+          <House className="h-6 w-6" />
           <span className="text-[10px] font-medium">Beranda</span>
         </Link>
         <Link href="/add" className="mb-10">
@@ -165,7 +161,7 @@ export default async function DashboardPage({
           </div>
         </Link>
         <Link href="/analysis" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors w-16 mb-6">
-          <BarChart3 className="h-6 w-6" />
+          <FileChartColumn className="h-6 w-6" />
           <span className="text-[10px] font-medium">Analisis</span>
         </Link>
       </div>

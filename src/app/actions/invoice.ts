@@ -32,60 +32,61 @@ export async function processInvoice(formData: FormData) {
       throw new Error('Please provide either text or an image.');
     }
 
-    let messages: any[] = [
-      {
-        role: 'system',
-        content: `Current date is ${new Date().toISOString()}. You are an intelligent invoice parser. 
-        Extract a comprehensive summary, date, total amount, and line items from the invoice.
-        Instead of just a merchant name, create a "summary" that describes the transaction in Indonesian, e.g., "Makan Siang di McDonald's" or "Belanja Bulanan di Indomaret".
-        The output must be a valid JSON object with the following exact structure:
-        {
-          "summary": "string",
-          "date": "YYYY-MM-DD",
-          "totalAmount": number,
-          "items": [
-            {
-              "name": "string",
-              "quantity": number,
-              "unitPrice": number,
-              "totalPrice": number,
-              "category": "string" (One of: Sembako, Makan & Minum, Transportasi, Utilitas, Hiburan, Kesehatan, Lain-lain)
-            }
-          ]
-        }
-        Auto-categorize each item into one of the categories.
-        Convert all currency to IDR (Rupiah) numeric values (e.g., 15000 for Rp15.000).
-        If the quantity is implicit (e.g., "Nasi Goreng"), assume 1.`,
-      },
-    ];
-
-    if (rawText) {
-      messages.push({
-        role: 'user',
-        content: rawText,
-      });
-    } else if (file) {
+    let imageUrl: string | undefined;
+    if (file) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const base64 = buffer.toString('base64');
-      
-      messages.push({
+      imageUrl = `data:${file.type};base64,${base64}`;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages: any[] = [
+      {
+        role: 'system',
+        content: `Current date is ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })} (UTC+7). You are an intelligent invoice parser.
+        Extract a comprehensive summary, date, total amount, and line items from the invoice.
+        Instead of just a merchant name, create a "summary" that describes the transaction in Indonesian, e.g., "Makan Siang di McDonald's" or "Belanja Bulanan di Indomaret".
+
+        The result MUST be a valid JSON object with the following structure:
+        {
+          "summary": "String",
+          "date": "ISO8601 Date String (YYYY-MM-DD)",
+          "totalAmount": Number,
+          "items": [
+            {
+              "name": "String",
+              "quantity": Number,
+              "unitPrice": Number,
+              "totalPrice": Number,
+              "category": "String (Food, Transport, Utilities, Entertainment, Health, Education, Shopping, Other)"
+            }
+          ]
+        }
+
+        IMPORTANT:
+        - The invoice is likely in Indonesian format (IDR).
+        - "." (DOT) is the THOUSAND separator (e.g., 38.000 = 38000, 1.500 = 1500).
+        - "," (COMMA) is the DECIMAL separator.
+        - Return all number fields as raw Integers (no formatting).
+        
+        Return ONLY the JSON. No markdown formatting.`
+      },
+      {
         role: 'user',
         content: [
-          { type: 'text', text: 'Parse this invoice.' },
-          {
-            type: 'image_url',
-            image_url: {
-              url: `data:${file.type};base64,${base64}`,
-            },
-          },
-        ],
-      });
-    }
+          { type: "text", text: "Please parse this invoice." },
+          ...(imageUrl ? [{ type: "image_url", image_url: { url: imageUrl } }] : []),
+          ...(rawText ? [{ type: "text", text: `Invoice Text:\n${rawText}` }] : [])
+        ]
+      }
+    ];
 
     const completion = await openai.chat.completions.create({
       model: modelName,
-      messages: messages,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      messages: messages as any,
+      max_tokens: 1000,
       response_format: { type: "json_object" },
     });
 
@@ -98,12 +99,16 @@ export async function processInvoice(formData: FormData) {
     let parsedData;
     try {
         parsedData = JSON.parse(content);
-    } catch (e) {
+    } catch {
         throw new Error('Failed to parse JSON response from AI.');
     }
 
     // Validate with Zod
     const result = InvoiceSchema.parse(parsedData);
+
+    if (result.items.length === 0 && (!result.totalAmount || result.totalAmount === 0)) {
+      throw new Error('Gagal memproses data invoice. Pastikan gambar/teks jelas.');
+    }
 
     const pocketId = formData.get('pocketId') as string;
     

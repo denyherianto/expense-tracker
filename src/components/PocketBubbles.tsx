@@ -27,13 +27,14 @@ interface Pocket {
 interface PocketBubblesProps {
   pockets: Pocket[];
   totalSpend: number; // Maybe optional to show total per pocket if we want later, unused for now.
+  readonly?: boolean;
 }
 
-export function PocketBubbles({ pockets }: PocketBubblesProps) {
+export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPocketId = searchParams.get('pocketId') || 'all';
-  
+
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -87,7 +88,7 @@ export function PocketBubbles({ pockets }: PocketBubblesProps) {
 
   async function handleDelete(id: string) {
     if (!confirm('Anda yakin ingin menghapus pocket ini? Faktur yang terkait mungkin akan terpengaruh.')) return;
-    
+
     setIsLoading(true);
     const result = await deletePocket(id);
     setIsLoading(false);
@@ -126,91 +127,96 @@ export function PocketBubbles({ pockets }: PocketBubblesProps) {
         {pockets.map((pocket) => (
           <div key={pocket.id} className="relative group">
             <Button
-                variant={currentPocketId === pocket.id ? 'default' : 'outline'}
-                size="sm"
-                className={cn(
-                    "rounded-full h-8 px-4 text-xs pr-8 relative", // Extra padding for the menu trigger
-                    currentPocketId === pocket.id ? "" : "bg-background/50 backdrop-blur"
-                )}
-                onClick={() => handleSelect(pocket.id)}
+              variant={currentPocketId === pocket.id ? 'default' : 'outline'}
+              size="sm"
+              className={cn(
+                "rounded-full h-8 px-4 text-xs relative", // Extra padding for the menu trigger
+                !readonly && "pr-8",
+                currentPocketId === pocket.id ? "" : "bg-background/50 backdrop-blur"
+              )}
+              onClick={() => handleSelect(pocket.id)}
             >
-                {pocket.name}
+              {pocket.name}
             </Button>
-            
+
             {/* Context Menu Trigger */}
-            <div className="absolute right-1 top-1/2 -translate-y-1/2">
+            {!readonly && (
+              <div className="absolute right-1 top-1/2 -translate-y-1/2">
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-muted/50 p-0">
-                            <MoreHorizontal className="h-3 w-3 text-muted-foreground" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openShare(pocket); }}>
-                    <Users className="mr-2 h-3 w-3" /> Bagikan
-                  </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(pocket); }}>
-                    <Pencil className="mr-2 h-3 w-3" /> Ubah Nama
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(pocket.id); }} className="text-destructive focus:text-destructive">
-                    <Trash2 className="mr-2 h-3 w-3" /> Hapus
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-muted/50 p-0">
+                      <MoreHorizontal className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openShare(pocket); }}>
+                      <Users className="mr-2 h-3 w-3" /> Bagikan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(pocket); }}>
+                      <Pencil className="mr-2 h-3 w-3" /> Ubah Nama
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(pocket.id); }} className="text-destructive focus:text-destructive">
+                      <Trash2 className="mr-2 h-3 w-3" /> Hapus
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
                 </DropdownMenu>
-            </div>
+              </div>
+            )}
           </div>
         ))}
 
         {/* Create New Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full h-8 w-8 border-dashed border-2 shrink-0"
-          onClick={() => setIsCreateOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        {!readonly && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full h-8 w-8 border-dashed border-2 shrink-0"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
-            <DialogHeader>
+          <DialogHeader>
             <DialogTitle>Buat Kantung Baru</DialogTitle>
-            </DialogHeader>
-            <div className="py-2">
+          </DialogHeader>
+          <div className="py-2">
             <Label>Nama</Label>
-                <Input 
-                    value={newName} 
-                    onChange={e => setNewName(e.target.value)} 
+            <Input
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Contoh: Liburan"
-                    className="mt-2"
-                />
-            </div>
-            <DialogFooter>
+              className="mt-2"
+            />
+          </div>
+          <DialogFooter>
             <Button onClick={handleCreate} disabled={isLoading}>Buat</Button>
-            </DialogFooter>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-       {/* Edit Dialog */}
-       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
-            <DialogHeader>
+          <DialogHeader>
             <DialogTitle>Ubah Nama Pocket</DialogTitle>
-            </DialogHeader>
-             <div className="py-2">
+          </DialogHeader>
+          <div className="py-2">
             <Label>Nama</Label>
-                <Input 
-                    value={newName} 
-                    onChange={e => setNewName(e.target.value)} 
+            <Input
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Nama Pocket"
-                    className="mt-2"
-                />
-            </div>
-             <DialogFooter>
+              className="mt-2"
+            />
+          </div>
+          <DialogFooter>
             <Button onClick={handleRename} disabled={isLoading}>Simpan</Button>
-            </DialogFooter>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -14,3 +14,11 @@ export function formatIDR(amount: number | string) {
     maximumFractionDigits: 0,
   }).format(num);
 }
+
+export function formatDate(date: Date | string | number, options: Intl.DateTimeFormatOptions = {}) {
+  const d = new Date(date);
+  return new Intl.DateTimeFormat('id-ID', {
+    ...options,
+    timeZone: 'Asia/Jakarta',
+  }).format(d);
+}

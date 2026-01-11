@@ -96,9 +96,9 @@ export function AnalysisCharts({ data }: { data: ChartData }) {
                 <CardContent>
                     <div className="space-y-4">
                         {data.itemData.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between">
+                            <div key={index} className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3 overflow-hidden">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full border bg-muted text-xs font-medium">
+                                    <div className="flex h-8 w-8 flex-none items-center justify-center rounded-full border bg-muted text-xs font-medium">
                                         {index + 1}
                                     </div>
                                     <div className="font-medium truncate text-sm">{item.name}</div>

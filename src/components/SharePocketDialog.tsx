@@ -26,10 +26,18 @@ interface SharePocketDialogProps {
   trigger?: React.ReactNode;
 }
 
+interface Member {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  isOwner: boolean;
+}
+
 export function SharePocketDialog({ pocketId, pocketName, open, onOpenChange, trigger }: SharePocketDialogProps) {
   const [email, setEmail] = useState("");
   const [isSharing, setIsSharing] = useState(false);
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [internalIsOpen, setInternalIsOpen] = useState(false);
 
@@ -37,19 +45,20 @@ export function SharePocketDialog({ pocketId, pocketName, open, onOpenChange, tr
   const isOpen = isControlled ? open : internalIsOpen;
   const setIsOpen = isControlled ? onOpenChange! : setInternalIsOpen;
 
-  // Fetch members when dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      loadMembers();
-    }
-  }, [isOpen, pocketId]);
-
   async function loadMembers() {
     setIsLoadingMembers(true);
     const data = await getPocketMembers(pocketId);
     setMembers(data);
     setIsLoadingMembers(false);
   }
+
+  // Fetch members when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      loadMembers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, pocketId]);
 
   async function handleShare(e: React.FormEvent) {
     e.preventDefault();
@@ -87,7 +96,7 @@ export function SharePocketDialog({ pocketId, pocketName, open, onOpenChange, tr
       ) : null}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Share "{pocketName}"</DialogTitle>
+          <DialogTitle>Share &quot;{pocketName}&quot;</DialogTitle>
           <DialogDescription>
             Invite others to view and add expenses to this pocket.
           </DialogDescription>
@@ -122,7 +131,7 @@ export function SharePocketDialog({ pocketId, pocketName, open, onOpenChange, tr
                         <div key={member.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
-                                    <AvatarImage src={member.image} />
+                            <AvatarImage src={member.image || undefined} />
                                     <AvatarFallback>{member.name?.[0]?.toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div className="text-sm">

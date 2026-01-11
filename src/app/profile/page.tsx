@@ -35,7 +35,7 @@ async function getUserStats(userId: string) {
     return {
         totalSpend: Number(totalSpendResult?.value || 0),
         invoiceCount: Number(totalInvoices[0]?.count || 0),
-        topCategory: topCategoryResult.rows[0] ? (topCategoryResult.rows[0] as any).category : 'Belum ada',
+        topCategory: topCategoryResult.rows[0] ? (topCategoryResult.rows[0] as { category: string }).category : 'Belum ada',
     };
 }
 

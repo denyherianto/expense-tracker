@@ -30,10 +30,10 @@ export default async function InvoiceDetailPage({
   }
 
   return (
-    <div className="container max-w-md mx-auto p-4 min-h-screen font-sans">
-      <div className="flex items-center gap-4 mb-6 pt-2">
+    <div className="container max-w-md mx-auto p-4 min-h-screen">
+      <div className="flex items-center gap-4 mb-6">
         <Link href="/">
-          <Button variant="ghost" size="icon" className="-ml-3"><ArrowLeft className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon"><span className="material-symbols-outlined">arrow_back</span></Button>
         </Link>
         <h1 className="text-xl font-bold truncate">{invoice.summary}</h1>
       </div>
@@ -48,20 +48,20 @@ export default async function InvoiceDetailPage({
         </CardHeader>
         <CardContent>
              <div className="mt-2">
-                <h3 className="text-sm font-semibold mb-2">Items</h3>
-                <Table>
+            <h3 className="text-sm font-semibold mb-2">Detail Belanja</h3>
+            <Table className="table-fixed">
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[60%]">Nama</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="w-[70%]">Nama</TableHead>
+                  <TableHead className="text-right w-[30%]">Total</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {invoice.items.map((item) => (
                             <TableRow key={item.id}>
-                                <TableCell>
-                                    <div className="font-medium">{item.name}</div>
-                                    <div className="text-[10px] text-muted-foreground">
+                            <TableCell className="align-top">
+                              <div className="font-medium truncate pr-2" title={item.name}>{item.name}</div>
+                              <div className="text-[10px] text-muted-foreground truncate">
                                         {Number(item.quantity)} x {formatIDR(Number(item.unitPrice))} &bull; <Badge variant="outline" className="text-[9px] h-4 px-1 py-0">{item.category}</Badge>
                                     </div>
                                 </TableCell>
