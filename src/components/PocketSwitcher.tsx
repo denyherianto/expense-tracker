@@ -34,10 +34,10 @@ export function PocketSwitcher({ pockets }: PocketSwitcherProps) {
     <div className="flex items-center gap-2">
       <Select value={currentPocketId} onValueChange={handleValueChange}>
         <SelectTrigger className="w-[180px] h-8 text-xs font-medium bg-background/50 border-input/50 backdrop-blur">
-          <SelectValue placeholder="Semua Pocket" />
+          <SelectValue placeholder="All Pockets" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Semua Pocket</SelectItem>
+          <SelectItem value="all">All Pockets</SelectItem>
           {pockets.map((pocket) => (
             <SelectItem key={pocket.id} value={pocket.id}>
               {pocket.name}

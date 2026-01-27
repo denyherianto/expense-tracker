@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
 import { formatIDR, formatDate } from '@/lib/utils';
 import { getInvoices } from '@/app/actions/getInvoices';
 import { Loader2 } from 'lucide-react';
@@ -86,45 +85,46 @@ export function InvoiceList({ initialInvoices, initialHasMore }: InvoiceListProp
   }, [isLoading, hasMore, loadMore]);
 
   if (invoices.length === 0) {
-    return <p className="text-center text-muted-foreground mt-10">Tidak ada Transaksi ditemukan.</p>;
+    return (
+      <div className="text-center py-12 text-zinc-500 text-sm border border-dashed border-zinc-200 rounded-2xl bg-zinc-100/50">
+        <span className="material-symbols-outlined mb-3 text-zinc-400" style={{ fontSize: '32px' }}>search_off</span>
+        <p>No transactions found.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-3 pb-8">
+    <div className="flex flex-col pb-8">
       {invoices.map((invoice, index) => {
         const isLastObj = invoices.length === index + 1;
         return (
-            <div key={`${invoice.id}-${index}`} ref={isLastObj ? lastElementRef : null}>
-              <Link href={`/invoices/${invoice.id}`}>
-                <Card className="hover:bg-accent/50 transition-colors mb-2 !py-0 shadow-none rounded-md">
-                  <CardContent className="p-4 flex justify-between items-center">
-                    <div>
-                      <div className="font-medium text-base">{invoice.summary}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatDate(invoice.date, { day: '2-digit', month: 'short', year: 'numeric' })}
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground text-[10px]">
-                          {invoice.pocket?.name}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-sm">
-                        {formatIDR(Number(invoice.totalAmount))}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {invoice.items.length} item
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
+          <div key={`${invoice.id}-${index}`} ref={isLastObj ? lastElementRef : null}>
+            <Link href={`/invoices/${invoice.id}`}>
+              <div className="group flex items-center justify-between py-4 border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50 -mx-2 px-2 rounded-xl transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200/50 flex items-center justify-center text-zinc-500">
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>receipt</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-900 truncate max-w-[180px]">{invoice.summary}</span>
+                    <span className="text-xs text-zinc-500 font-light flex items-center gap-1">
+                      {invoice.pocket?.name} <span className="w-0.5 h-0.5 rounded-full bg-zinc-300"></span> {formatDate(invoice.date, { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="block text-sm font-medium text-zinc-900 tabular-nums">{formatIDR(Number(invoice.totalAmount))}</span>
+                  <span className="text-[10px] text-zinc-400 font-light">{invoice.items.length} item</span>
+                </div>
+              </div>
+            </Link>
+          </div>
         );
       })}
-      
+
       {isLoading && (
         <div className="flex justify-center p-4">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
         </div>
       )}
     </div>

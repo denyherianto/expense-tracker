@@ -35,26 +35,29 @@ export default async function InvoicesPage({
   });
 
   return (
-    <div className="container max-w-md mx-auto p-4 min-h-screen">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="max-w-md mx-auto px-6 min-h-screen bg-zinc-50">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-zinc-50/80 backdrop-blur-md border-b border-zinc-200/50 -mx-6 px-6 py-4 flex items-center gap-4">
         <Link href="/">
-          <Button variant="ghost" size="icon"><span className="material-symbols-outlined">arrow_back</span></Button>
+          <Button variant="ghost" size="icon" className="text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 -ml-2">
+            <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>arrow_back</span>
+          </Button>
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Riwayat Belanja</h1>
-      </div>
+        <h1 className="text-lg font-medium tracking-tight text-zinc-900">Transaction History</h1>
+      </header>
 
-      <div className="mb-6 h-8">
-        <PocketBubbles pockets={pockets} totalSpend={0} readonly={true} />
-      </div>
+      <section className="py-6">
+        <div className="mb-6">
+          <PocketBubbles pockets={pockets} totalSpend={0} readonly={true} />
+        </div>
 
-      <div className="space-y-2 mb-6">
-        <SearchInput placeholder="Cari transaksi atau barang..." />
-        <MonthFilter />
-      </div>
+        <div className="space-y-3 mb-6">
+          <SearchInput placeholder="Search transactions or items..." />
+          <MonthFilter />
+        </div>
 
-      <div className="space-y-3">
         <InvoiceList initialInvoices={data} initialHasMore={hasMore} />
-      </div>
+      </section>
     </div>
   );
 }

@@ -61,13 +61,13 @@ export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps)
     const result = await createPocket(newName);
     setIsLoading(false);
     if (result.success) {
-      toast.success('Pocket berhasil dibuat');
+      toast.success('Pocket created successfully');
       setNewName('');
       setIsCreateOpen(false);
       // Select the new pocket?
       if (result.data) handleSelect(result.data.id);
     } else {
-      toast.error('Gagal membuat pocket');
+      toast.error('Failed to create pocket');
     }
   }
 
@@ -77,26 +77,26 @@ export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps)
     const result = await renamePocket(pocketToEdit.id, newName);
     setIsLoading(false);
     if (result.success) {
-      toast.success('Nama pocket diubah');
+      toast.success('Pocket renamed');
       setNewName('');
       setIsEditOpen(false);
       setPocketToEdit(null);
     } else {
-      toast.error('Gagal mengubah nama pocket');
+      toast.error('Failed to rename pocket');
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Anda yakin ingin menghapus pocket ini? Faktur yang terkait mungkin akan terpengaruh.')) return;
+    if (!confirm('Are you sure you want to delete this pocket? Related invoices may be affected.')) return;
 
     setIsLoading(true);
     const result = await deletePocket(id);
     setIsLoading(false);
     if (result.success) {
-      toast.success('Pocket dihapus');
+      toast.success('Pocket deleted');
       if (currentPocketId === id) handleSelect('all');
     } else {
-      toast.error('Gagal menghapus pocket');
+      toast.error('Failed to delete pocket');
     }
   }
 
@@ -112,16 +112,21 @@ export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps)
   };
 
   return (
-    <div className="w-full overflow-x-auto pb-2 scrollbar-hide" ref={scrollContainerRef}>
+    <div className="w-full overflow-x-auto pb-2 no-scrollbar" ref={scrollContainerRef}>
       <div className="flex space-x-2">
         {/* All Pockets Bubble */}
         <Button
           variant={currentPocketId === 'all' ? 'default' : 'outline'}
           size="sm"
-          className="rounded-full h-8 px-4 text-xs"
+          className={cn(
+            "rounded-full h-8 px-4 text-xs shadow-subtle transition-all",
+            currentPocketId === 'all'
+              ? "bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800"
+              : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
+          )}
           onClick={() => handleSelect('all')}
         >
-          Semua
+          All
         </Button>
 
         {pockets.map((pocket) => (
@@ -130,9 +135,11 @@ export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps)
               variant={currentPocketId === pocket.id ? 'default' : 'outline'}
               size="sm"
               className={cn(
-                "rounded-full h-8 px-4 text-xs relative", // Extra padding for the menu trigger
+                "rounded-full h-8 px-4 text-xs shadow-subtle transition-all",
                 !readonly && "pr-8",
-                currentPocketId === pocket.id ? "" : "bg-background/50 backdrop-blur"
+                currentPocketId === pocket.id
+                  ? "bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800"
+                  : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
               )}
               onClick={() => handleSelect(pocket.id)}
             >
@@ -144,19 +151,19 @@ export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps)
               <div className="absolute right-1 top-1/2 -translate-y-1/2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-muted/50 p-0">
-                      <MoreHorizontal className="h-3 w-3 text-muted-foreground" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-zinc-200/50 p-0">
+                      <MoreHorizontal className="h-3 w-3 text-zinc-400" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openShare(pocket); }}>
-                      <Users className="mr-2 h-3 w-3" /> Bagikan
+                  <DropdownMenuContent align="start" className="rounded-xl border-zinc-200">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openShare(pocket); }} className="text-zinc-700">
+                      <Users className="mr-2 h-3 w-3" /> Share
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(pocket); }}>
-                      <Pencil className="mr-2 h-3 w-3" /> Ubah Nama
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(pocket); }} className="text-zinc-700">
+                      <Pencil className="mr-2 h-3 w-3" /> Rename
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(pocket.id); }} className="text-destructive focus:text-destructive">
-                      <Trash2 className="mr-2 h-3 w-3" /> Hapus
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(pocket.id); }} className="text-red-600 focus:text-red-600">
+                      <Trash2 className="mr-2 h-3 w-3" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -170,7 +177,7 @@ export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps)
           <Button
             variant="outline"
             size="icon"
-            className="rounded-full h-8 w-8 border-dashed border-2 shrink-0"
+            className="rounded-full h-8 w-8 border-dashed border-2 border-zinc-300 shrink-0 text-zinc-400 hover:text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50"
             onClick={() => setIsCreateOpen(true)}
           >
             <Plus className="h-4 w-4" />
@@ -180,42 +187,42 @@ export function PocketBubbles({ pockets, readonly = false }: PocketBubblesProps)
 
       {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl border-zinc-200">
           <DialogHeader>
-            <DialogTitle>Buat Kantung Baru</DialogTitle>
+            <DialogTitle className="text-zinc-900">Create New Pocket</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Label>Nama</Label>
+            <Label className="text-zinc-700">Name</Label>
             <Input
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              placeholder="Contoh: Liburan"
-              className="mt-2"
+              placeholder="e.g., Vacation"
+              className="mt-2 rounded-xl border-zinc-200 focus:border-zinc-400"
             />
           </div>
           <DialogFooter>
-            <Button onClick={handleCreate} disabled={isLoading}>Buat</Button>
+            <Button onClick={handleCreate} disabled={isLoading} className="rounded-xl bg-zinc-900 hover:bg-zinc-800">Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl border-zinc-200">
           <DialogHeader>
-            <DialogTitle>Ubah Nama Pocket</DialogTitle>
+            <DialogTitle className="text-zinc-900">Rename Pocket</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Label>Nama</Label>
+            <Label className="text-zinc-700">Name</Label>
             <Input
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              placeholder="Nama Pocket"
-              className="mt-2"
+              placeholder="Pocket Name"
+              className="mt-2 rounded-xl border-zinc-200 focus:border-zinc-400"
             />
           </div>
           <DialogFooter>
-            <Button onClick={handleRename} disabled={isLoading}>Simpan</Button>
+            <Button onClick={handleRename} disabled={isLoading} className="rounded-xl bg-zinc-900 hover:bg-zinc-800">Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

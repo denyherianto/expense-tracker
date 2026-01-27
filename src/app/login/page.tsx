@@ -31,16 +31,16 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-muted/40 font-sans">
-            <div className="mx-auto grid w-[350px] gap-6">
+        <div className="flex h-screen w-full items-center justify-center bg-zinc-50 font-sans">
+            <div className="mx-auto grid w-[350px] gap-6 px-6">
                 <div className="grid gap-2 text-center">
-                    <h1 className="text-3xl font-bold">Login</h1>
-                    <p className="text-balance text-muted-foreground">
-                        Masuk uktuk melanjutkan ke Finance Tracker
+                    <h1 className="text-3xl font-medium tracking-tight text-zinc-900">Login</h1>
+                    <p className="text-balance text-zinc-500">
+                        Masuk untuk melanjutkan ke Finance Tracker
                     </p>
                 </div>
                 <div className="grid gap-4">
-                    <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading}>
+                    <Button variant="outline" className="w-full h-12 rounded-xl border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 hover:border-zinc-300 shadow-subtle" onClick={handleGoogleLogin} disabled={isLoading}>
                         {isLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (

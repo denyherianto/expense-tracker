@@ -6,8 +6,7 @@ import { desc, gte, eq, and, sql, or, inArray } from 'drizzle-orm';
 import { formatIDR, formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { House, Plus, FileChartColumn, ArrowRight, Receipt } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { PocketBubbles } from '@/components/PocketBubbles';
 import { getPockets } from '@/app/actions/pockets';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -74,97 +73,105 @@ export default async function DashboardPage({
   if (!user) return null; // Should be handled by middleware, but for safety
 
   return (
-    <div className="container max-w-md mx-auto p-4 min-h-screen pb-24 font-sans">
-      <header className="flex flex-col gap-4 mb-6 pt-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Ringkasan</h1>
-            <p className="text-sm text-muted-foreground">{formatDate(new Date(), { month: 'long', year: 'numeric' })}</p>
-          </div>
+    <div className="max-w-md mx-auto px-6 min-h-screen pb-32 font-sans bg-zinc-50">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-zinc-50/80 backdrop-blur-md border-b border-zinc-200/50 -mx-6 px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
           <Link href="/profile">
-            <Avatar className="h-9 w-9 border cursor-pointer hover:opacity-80 transition-opacity">
+            <Avatar className="h-8 w-8 border border-zinc-200 cursor-pointer hover:opacity-80 transition-opacity">
               <AvatarImage src={user.image || ''} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="bg-zinc-900 text-white text-xs font-medium">{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
+          <div className="flex flex-col">
+            <span className="text-xs text-zinc-500 font-normal">{formatDate(new Date(), { month: 'long', year: 'numeric' })}</span>
+            <span className="text-sm font-medium tracking-tight">Overview</span>
+          </div>
         </div>
-        <PocketBubbles pockets={pockets} totalSpend={totalMonthSpend} />
       </header>
 
-      {/* Summary Card - Standard Shadcn */}
-      <Card className="mb-8 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardDescription>Total Pengeluaran Bulan Ini</CardDescription>
-          <CardTitle className="text-4xl font-bold tracking-tight">{formatIDR(Number(totalMonthSpend))}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
-            Diperbarui {formatDate(new Date(), { hour: '2-digit', minute: '2-digit', hour12: false })}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Total Spend */}
+      <section className="py-8">
+        <h1 className="text-zinc-500 text-sm font-normal mb-1">Total Expenses</h1>
+        <div className="flex items-baseline gap-1">
+          <span className="text-sm text-zinc-400 font-light -translate-y-1">Rp</span>
+          <span className="text-4xl font-medium tracking-tight text-zinc-900">
+            {new Intl.NumberFormat('id-ID').format(Number(totalMonthSpend))}
+          </span>
+        </div>
+      </section>
 
-      {/* Recent Activity */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold tracking-tight">Aktivitas Terkini</h2>
-        <Link href="/invoices" className="text-sm text-primary flex items-center hover:underline hover:underline-offset-4 transition-all">
-          Lihat Semua <ArrowRight className="ml-1 h-3 w-3" />
-        </Link>
-      </div>
+      {/* Pockets */}
+      <section className="mb-8">
+        <PocketBubbles pockets={pockets} totalSpend={totalMonthSpend} />
+      </section>
 
-      <div className="space-y-3">
-        {recentInvoices.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm border border-dashed rounded-xl bg-muted/30">
-            <Receipt className="mx-auto h-8 w-8 mb-3 opacity-50" />
-            <p>Belum ada transaksi {params.pocketId ? 'di Kantung ini' : 'bulan ini'}.</p>
-            <div className="mt-4">
-              <Link href="/add">
-                <Button variant="outline" size="sm">Tambah Transaksi</Button>
-              </Link>
+      {/* Recent Invoices */}
+      <section>
+        <h2 className="text-sm font-medium tracking-tight text-zinc-900 mb-4">Recent Transactions</h2>
+
+        <div className="flex flex-col">
+          {recentInvoices.length === 0 ? (
+            <div className="text-center py-12 text-zinc-500 text-sm border border-dashed border-zinc-200 rounded-2xl bg-zinc-100/50">
+              <span className="material-symbols-outlined mb-3 text-zinc-400" style={{ fontSize: '32px' }}>receipt_long</span>
+              <p>No transactions {params.pocketId ? 'in this Pocket' : 'this month'}.</p>
+              <div className="mt-4">
+                <Link href="/add">
+                  <Button variant="outline" size="sm" className="rounded-xl">Add Transaction</Button>
+                </Link>
+              </div>
             </div>
-          </div>
-        ) : (
-          recentInvoices.map((invoice) => (
-            <Link href={`/invoices/${invoice.id}`} key={invoice.id}>
-              <Card className="hover:bg-muted/50 transition-colors rounded-md shadow-none mb-2 !py-0">
-                <CardContent className="p-4 flex justify-between items-center">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="overflow-hidden w-full">
-                      <div className="font-medium text-sm truncate pr-4">{invoice.summary}</div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <span>{formatDate(invoice.date, { day: '2-digit', month: 'short' })}</span>
-                        <span className="text-[10px] text-muted-foreground/50">•</span>
-                        <span className="capitalize">{invoice.pocket?.name}</span>
+          ) : (
+              <>
+                {recentInvoices.map((invoice) => (
+                  <Link href={`/invoices/${invoice.id}`} key={invoice.id}>
+                  <div className="group flex items-center justify-between py-4 border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50 -mx-2 px-2 rounded-xl transition-colors cursor-pointer">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200/50 flex items-center justify-center text-zinc-500">
+                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>receipt</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-zinc-900 truncate max-w-[180px]">{invoice.summary}</span>
+                        <span className="text-xs text-zinc-500 font-light flex items-center gap-1">
+                          {invoice.pocket?.name} <span className="w-0.5 h-0.5 rounded-full bg-zinc-300"></span> {formatDate(invoice.date, { day: '2-digit', month: 'short' })}
+                        </span>
                       </div>
                     </div>
+                    <div className="text-right">
+                      <span className="block text-sm font-medium text-zinc-900 tabular-nums">{formatIDR(Number(invoice.totalAmount))}</span>
+                    </div>
                   </div>
-                  <div className="font-semibold text-sm whitespace-nowrap">
-                    {formatIDR(Number(invoice.totalAmount))}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))
-        )}
-      </div>
+                </Link>
+              ))}
+              <Link href="/invoices" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors mt-4 flex items-center justify-center gap-1">
+                View All <ArrowRight className="h-3 w-3" />
+              </Link>
+            </>
+          )}
+        </div>
+      </section>
 
-      {/* Bottom Nav - Glassmorphism & Lucide Icons */}
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-md pb-safe pt-2 px-6 flex justify-between items-end h-[85px] max-w-md mx-auto z-50">
-        <Link href="/" className="flex flex-col items-center gap-1 text-primary w-16 mb-6">
-          <House className="h-6 w-6" />
-          <span className="text-[10px] font-medium">Beranda</span>
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-zinc-200/80 px-6 py-4 pb-6 flex justify-between items-center z-40 max-w-md mx-auto">
+        <Link href="/" className="flex flex-col items-center gap-1 text-zinc-900 w-16">
+          <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>home</span>
+          <span className="text-[10px] font-medium">Home</span>
         </Link>
-        <Link href="/add" className="mb-10">
-          <div className="bg-primary text-primary-foreground rounded-full h-14 w-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95">
-            <Plus className="h-7 w-7" />
-          </div>
+        <div className="w-14"></div> {/* Spacer for FAB */}
+        <Link href="/analysis" className="flex flex-col items-center gap-1 text-zinc-400 hover:text-zinc-600 transition-colors w-16">
+          <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>pie_chart</span>
+          <span className="text-[10px] font-medium">Analysis</span>
         </Link>
-        <Link href="/analysis" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors w-16 mb-6">
-          <FileChartColumn className="h-6 w-6" />
-          <span className="text-[10px] font-medium">Analisis</span>
-        </Link>
-      </div>
+
+        {/* Center Floating Action Button */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-6">
+          <Link href="/add">
+            <button className="w-14 h-14 bg-zinc-900 rounded-full text-white shadow-float flex items-center justify-center hover:scale-105 active:scale-95 transition-transform border-4 border-zinc-50">
+              <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>add</span>
+            </button>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }

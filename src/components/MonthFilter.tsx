@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, subMonths } from "date-fns";
-import { id } from "date-fns/locale";
 
 export function MonthFilter() {
   const router = useRouter();
@@ -24,7 +23,7 @@ export function MonthFilter() {
     const date = subMonths(now, i);
     return {
       value: format(date, 'yyyy-MM'),
-      label: format(date, 'MMMM yyyy', { locale: id }),
+      label: format(date, 'MMMM yyyy'),
     };
   });
 
@@ -36,12 +35,12 @@ export function MonthFilter() {
 
   return (
     <Select value={currentMonthValue} onValueChange={handleValueChange}>
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Pilih Bulan" />
+      <SelectTrigger className="w-full bg-white border-zinc-200 rounded-xl shadow-subtle text-zinc-900 focus:ring-zinc-400">
+        <SelectValue placeholder="Select Month" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="rounded-xl border-zinc-200">
         {months.map((month) => (
-          <SelectItem key={month.value} value={month.value}>
+          <SelectItem key={month.value} value={month.value} className="text-zinc-700 focus:bg-zinc-100">
             {month.label}
           </SelectItem>
         ))}

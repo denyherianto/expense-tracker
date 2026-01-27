@@ -43,13 +43,13 @@ function PocketSelector({
       {pockets.length === 0 ? (
         <Link href="/" className="block">
           <Button variant="outline" className="w-full border-dashed">
-            <Plus className="mr-2 h-4 w-4" /> Buat Kantung Baru
+            <Plus className="mr-2 h-4 w-4" /> Create New Pocket
           </Button>
         </Link>
       ) : (
         <Select value={selectedPocketId} onValueChange={onSelect}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Pilih Pocket" />
+            <SelectValue placeholder="Select Pocket" />
           </SelectTrigger>
           <SelectContent>
             {pockets.map((p) => (
@@ -92,7 +92,7 @@ export default function AddInvoicePage() {
       const recognition = new (window as unknown as IWindow).webkitSpeechRecognition();
       recognition.continuous = false; // Stop after one sentence
       recognition.interimResults = true;
-      recognition.lang = 'id-ID';
+      recognition.lang = 'en-US';
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognition.onresult = (event: any) => {
@@ -117,7 +117,7 @@ export default function AddInvoicePage() {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      toast.error('Browser Anda tidak mendukung input suara.');
+      toast.error('Your browser does not support voice input.');
       return;
     }
 
@@ -128,7 +128,7 @@ export default function AddInvoicePage() {
       try {
         recognitionRef.current.start();
         setIsListening(true);
-        toast.info('Mendengarkan... (Bicara sekarang)');
+        toast.info('Listening... (Speak now)');
       } catch (e) {
         console.error(e);
         setIsListening(false);
@@ -145,12 +145,12 @@ export default function AddInvoicePage() {
     const promise = processInvoice(formData);
 
     toast.promise(promise, {
-      loading: 'Memproses transaksi...',
+      loading: 'Processing transaction...',
       success: (result) => {
         setIsPending(false);
         if (result.success) {
             router.push('/'); // Redirect to dashboard
-          return `Berhasil memproses transaksi ${result.data?.summary}!`;
+          return `Successfully processed: ${result.data?.summary}!`;
         } else {
             throw new Error(result.error);
         }
@@ -186,7 +186,7 @@ export default function AddInvoicePage() {
     // Check if file is present
     const file = formData.get('file') as File;
     if (!file || file.size === 0) {
-      toast.error('Mohon ambil foto atau upload gambar struk.');
+      toast.error('Please take a photo or upload a receipt image.');
       return;
     }
 
@@ -194,12 +194,12 @@ export default function AddInvoicePage() {
     const promise = processInvoice(formData);
 
     toast.promise(promise, {
-      loading: 'Memindai struk...',
+      loading: 'Scanning receipt...',
       success: (result) => {
          setIsPending(false);
          if (result.success) {
-            router.push('/'); 
-           return `Berhasil memindai struk ${result.data?.summary}!`;
+            router.push('/');
+           return `Successfully scanned: ${result.data?.summary}!`;
          } else {
              throw new Error(result.error);
          }
@@ -212,25 +212,29 @@ export default function AddInvoicePage() {
   }
 
   return (
-    <div className="container max-w-md mx-auto p-4 min-h-screen">
-      <div className="flex items-center gap-4 mb-6 pt-2">
+    <div className="max-w-md mx-auto px-6 min-h-screen bg-zinc-50">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-zinc-50/80 backdrop-blur-md border-b border-zinc-200/50 -mx-6 px-6 py-4 flex items-center gap-4">
         <Link href="/">
-          <Button variant="ghost" size="icon" className="-ml-3"><ArrowLeft className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" className="text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 -ml-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Catat Pengeluaran</h1>
-      </div>
+        <h1 className="text-lg font-medium tracking-tight text-zinc-900">Add Expense</h1>
+      </header>
 
-      <Card className="border-border/50 shadow-xl">
-        <CardHeader>
-          <CardTitle>Metode Input</CardTitle>
-          <CardDescription>Pilih cara menambahkan transaksi</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <section className="py-6">
+        <Card className="border-zinc-200/60 shadow-subtle rounded-2xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-zinc-900 text-base">Input Method</CardTitle>
+            <CardDescription className="text-zinc-500">Choose how to add your transaction</CardDescription>
+          </CardHeader>
+          <CardContent>
           <Tabs defaultValue="text" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="text"><Type className="w-4 h-4 mr-2" /> Teks</TabsTrigger>
-              <TabsTrigger value="voice"><Mic className="w-4 h-4 mr-2" /> Suara</TabsTrigger>
-              <TabsTrigger value="camera"><Camera className="w-4 h-4 mr-2" /> Kamera</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 mb-4 bg-zinc-100 rounded-xl p-1">
+              <TabsTrigger value="text" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-subtle text-zinc-500"><Type className="w-4 h-4 mr-2" /> Text</TabsTrigger>
+              <TabsTrigger value="voice" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-subtle text-zinc-500"><Mic className="w-4 h-4 mr-2" /> Voice</TabsTrigger>
+              <TabsTrigger value="camera" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-subtle text-zinc-500"><Camera className="w-4 h-4 mr-2" /> Camera</TabsTrigger>
             </TabsList>
             
             <TabsContent value="text">
@@ -241,17 +245,17 @@ export default function AddInvoicePage() {
                   onSelect={setSelectedPocketId}
                 />
                 <div className="space-y-2">
-                  <Label htmlFor="rawText">Deskripsi</Label>
-                  <Textarea 
-                    id="rawText" 
-                    name="rawText" 
-                    placeholder="Contoh: Beli Susu 2L, Roti total Rp50.000" 
+                  <Label htmlFor="rawText">Description</Label>
+                  <Textarea
+                    id="rawText"
+                    name="rawText"
+                    placeholder="E.g., Bought milk 2L, bread total $25"
                     className="min-h-[150px] text-lg resize-none"
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full h-12 text-base" disabled={isPending}>
-                  {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Memproses...</> : 'Proses Transaksi'}
+                <Button type="submit" className="w-full h-12 text-base rounded-xl bg-zinc-900 hover:bg-zinc-800" disabled={isPending}>
+                  {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</> : 'Process Transaction'}
                 </Button>
               </form>
             </TabsContent>
@@ -264,15 +268,15 @@ export default function AddInvoicePage() {
                   onSelect={setSelectedPocketId}
                 />
                 <div className="space-y-4">
-                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl bg-muted/30">
+                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-zinc-200 rounded-2xl bg-zinc-50">
                     <Button
                       type="button"
                       variant={isListening ? "destructive" : "default"}
                       size="lg"
                       onClick={toggleListening}
                       className={cn(
-                        "h-16 w-16 rounded-full shadow-lg mb-4 transition-all duration-300",
-                        isListening ? 'animate-pulse scale-110' : 'hover:scale-105'
+                        "h-16 w-16 rounded-full shadow-float mb-4 transition-all duration-300",
+                        isListening ? 'animate-pulse scale-110 bg-red-500 hover:bg-red-600' : 'bg-zinc-900 hover:bg-zinc-800 hover:scale-105'
                       )}
                     >
                       {isListening ? (
@@ -281,26 +285,26 @@ export default function AddInvoicePage() {
                         <Mic className="h-8 w-8" />
                       )}
                     </Button>
-                    <p className="text-sm font-medium text-muted-foreground text-center">
-                      {isListening ? 'Mendengarkan... (Ketuk untuk berhenti)' : 'Ketuk mikrofon untuk mulai bicara'}
+                    <p className="text-sm font-medium text-zinc-500 text-center">
+                      {isListening ? 'Listening... (Tap to stop)' : 'Tap microphone to start speaking'}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="voiceText">Hasil Suara</Label>
+                    <Label htmlFor="voiceText" className="text-zinc-700">Voice Result</Label>
                     <Textarea
                       id="voiceText"
                       name="rawText"
                       value={text}
                       onChange={(e) => setText(e.target.value)}
-                      placeholder="Hasil suara akan muncul di sini..."
-                      className="min-h-[100px] text-lg resize-none"
+                      placeholder="Voice transcription will appear here..."
+                      className="min-h-[100px] text-lg resize-none rounded-xl border-zinc-200 focus:border-zinc-400"
                       required
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full h-12 text-base" disabled={isPending}>
-                  {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Memproses...</> : 'Proses Transaksi'}
+                <Button type="submit" className="w-full h-12 text-base rounded-xl bg-zinc-900 hover:bg-zinc-800" disabled={isPending}>
+                  {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</> : 'Process Transaction'}
                 </Button>
               </form>
             </TabsContent>
@@ -324,17 +328,17 @@ export default function AddInvoicePage() {
                   />
                   <Label htmlFor="file" className="sr-only">Upload Receipt</Label>
                   {previewUrl ? (
-                    <div className="relative w-full aspect-square bg-muted rounded-xl border border-border overflow-hidden group">
+                    <div className="relative w-full aspect-square bg-zinc-100 rounded-2xl border border-zinc-200 overflow-hidden group">
                       <Image
                         src={previewUrl}
                         alt="Preview"
                         fill
-                        className="object-contain" // Contain to show full receipt
+                        className="object-contain"
                       />
                       <button
                         type="button"
                         onClick={removeImage}
-                        className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                        className="absolute top-2 right-2 bg-zinc-900/50 text-white p-2 rounded-full hover:bg-zinc-900/70 transition-colors"
                       >
                         <X className="w-5 h-5" />
                       </button>
@@ -342,21 +346,22 @@ export default function AddInvoicePage() {
                   ) : (
                       <Label
                         htmlFor="file"
-                        className="relative w-full aspect-square bg-muted rounded-xl border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer"
+                        className="relative w-full aspect-square bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center overflow-hidden hover:bg-zinc-100 transition-colors cursor-pointer"
                       >
-                        <Camera className="w-12 h-12 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground font-medium">Ketuk untuk ambil foto</p>
+                        <Camera className="w-12 h-12 text-zinc-400 mb-2" />
+                        <p className="text-sm text-zinc-500 font-medium">Tap to take a photo</p>
                       </Label>
                   )}
                 </div>
-                <Button type="submit" className="w-full h-12 text-base" disabled={isPending}>
-                  {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Memindai...</> : 'Scan Struk'}
+                <Button type="submit" className="w-full h-12 text-base rounded-xl bg-zinc-900 hover:bg-zinc-800" disabled={isPending}>
+                  {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Scanning...</> : 'Scan Receipt'}
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+      </section>
     </div>
   );
 }

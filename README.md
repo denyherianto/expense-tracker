@@ -50,8 +50,8 @@ This app leverages **any OpenAI-compatible LLM** (OpenAI, Azure OpenAI, local mo
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd finance-tracker
+git clone https://github.com/denyherianto/expense-tracker
+cd expense-tracker
 ```
 
 ### 2. Install dependencies

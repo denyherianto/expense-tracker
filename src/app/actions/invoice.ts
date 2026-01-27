@@ -46,7 +46,7 @@ export async function processInvoice(formData: FormData) {
         role: 'system',
         content: `Current date is ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })} (UTC+7). You are an intelligent invoice parser.
         Extract a comprehensive summary, date, total amount, and line items from the invoice.
-        Instead of just a merchant name, create a "summary" that describes the transaction in Indonesian, e.g., "Makan Siang di McDonald's" or "Belanja Bulanan di Indomaret".
+        Instead of just a merchant name, create a "summary" that describes the transaction in English, e.g., "Lunch at McDonald's" or "Monthly Groceries at Walmart".
 
         The result MUST be a valid JSON object with the following structure:
         {
@@ -107,7 +107,7 @@ export async function processInvoice(formData: FormData) {
     const result = InvoiceSchema.parse(parsedData);
 
     if (result.items.length === 0 && (!result.totalAmount || result.totalAmount === 0)) {
-      throw new Error('Gagal memproses data invoice. Pastikan gambar/teks jelas.');
+      throw new Error('Failed to process invoice data. Please ensure the image/text is clear.');
     }
 
     const pocketId = formData.get('pocketId') as string;

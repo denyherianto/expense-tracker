@@ -44,20 +44,20 @@ export function DeleteInvoiceButton({ id }: { id: string }) {
             <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" className="w-full flex items-center gap-2" disabled={isDeleting}>
                     <Trash2 className="h-4 w-4" />
-                    {isDeleting ? "Menghapus..." : "Hapus Transaksi"}
+                    {isDeleting ? "Deleting..." : "Delete Transaction"}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Transaksi?</AlertDialogTitle>
+                    <AlertDialogTitle>Delete Transaction?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Tindakan ini tidak dapat dibatalkan. Transaksi akan dihapus permanen.
+                        This action cannot be undone. The transaction will be permanently deleted.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
-                        Hapus
+                        Delete
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

@@ -1,0 +1,384 @@
+<html lang="en" class="antialiased h-full bg-zinc-50"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#fafafa">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Invoice Tracker</title>
+    
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
+
+    <!-- Tailwind Config for Colors/Fonts -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        zinc: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#a1a1aa',
+                            500: '#71717a',
+                            600: '#52525b',
+                            800: '#27272a',
+                            900: '#18181b',
+                        }
+                    },
+                    boxShadow: {
+                        'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                        'float': '0 10px 30px -10px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbar hide */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Custom Checkbox/Radio styles */
+        .custom-radio:checked + div {
+            border-color: #18181b;
+            background-color: #fafafa;
+            color: #18181b;
+        }
+        .custom-radio:checked + div iconify-icon {
+            color: #18181b;
+        }
+        
+        /* Shimmer effect for OCR loading */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .loading-shimmer {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #f4f4f5 4%, #e4e4e7 25%, #f4f4f5 36%);
+            background-size: 1000px 100%;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col text-zinc-900 selection:bg-zinc-200">
+
+    <!-- Top Navigation / Header -->
+    <header class="sticky top-0 z-30 bg-zinc-50/80 backdrop-blur-md border-b border-zinc-200/50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-medium tracking-tight">
+                JS
+            </div>
+            <div class="flex flex-col">
+                <span class="text-xs text-zinc-500 font-normal">October 2023</span>
+                <span class="text-sm font-medium tracking-tight">Overview</span>
+            </div>
+        </div>
+        <button class="text-zinc-400 hover:text-zinc-900 transition-colors">
+            <iconify-icon icon="solar:settings-linear" width="24" stroke-width="1.5"></iconify-icon>
+        </button>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar pb-32">
+        
+        <!-- Total Spend -->
+        <section class="px-6 py-8">
+            <h1 class="text-zinc-500 text-sm font-normal mb-1">Total Spend</h1>
+            <div class="flex items-baseline gap-1">
+                <span class="text-sm text-zinc-400 font-light translate-y-[-4px]">Rp</span>
+                <span class="text-4xl font-medium tracking-tight text-zinc-900" id="total-spend">8.450.000</span>
+            </div>
+            
+            <!-- Quick Actions: Natural Language Input -->
+            <div class="mt-8 relative group">
+                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <iconify-icon icon="solar:magic-stick-3-linear" class="text-zinc-400" width="20" stroke-width="1.5"></iconify-icon>
+                </div>
+                <input type="text" id="nl-input" placeholder="E.g. Lunch at Senopati Rp150.000..." class="w-full bg-white border border-zinc-200 text-zinc-900 text-sm rounded-2xl py-4 pl-12 pr-14 focus:outline-none focus:border-zinc-400 focus:ring-0 shadow-subtle transition-all placeholder:text-zinc-400 font-light">
+                <div class="absolute inset-y-0 right-3 flex items-center gap-2">
+                    <button class="p-2 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-colors" onclick="triggerFileInput()">
+                        <iconify-icon icon="solar:camera-linear" width="20" stroke-width="1.5"></iconify-icon>
+                    </button>
+                    <input type="file" id="receipt-upload" class="hidden" accept="image/*" onchange="handleFileUpload(this)">
+                </div>
+            </div>
+            <p class="mt-3 text-xs text-zinc-400 pl-4">Use AI to extract details from text or photos.</p>
+        </section>
+
+        <!-- Pockets Section -->
+        <section class="px-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-medium tracking-tight text-zinc-900">Pockets</h2>
+                <button class="text-xs text-zinc-400 hover:text-zinc-900">Manage</button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Business Pocket -->
+                <div class="bg-white p-4 rounded-2xl border border-zinc-200/60 shadow-subtle flex flex-col justify-between h-32 group cursor-pointer hover:border-zinc-300 transition-all">
+                    <div class="flex justify-between items-start">
+                        <div class="w-8 h-8 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-600">
+                            <iconify-icon icon="solar:case-linear" width="16" stroke-width="1.5"></iconify-icon>
+                        </div>
+                        <iconify-icon icon="solar:arrow-right-up-linear" class="text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity" width="18"></iconify-icon>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 mb-1">Business</p>
+                        <p class="text-lg font-medium tracking-tight text-zinc-900">Rp 5.2jt</p>
+                        <div class="w-full bg-zinc-100 h-1 rounded-full mt-3 overflow-hidden">
+                            <div class="bg-zinc-800 h-full rounded-full" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Pocket -->
+                <div class="bg-white p-4 rounded-2xl border border-zinc-200/60 shadow-subtle flex flex-col justify-between h-32 group cursor-pointer hover:border-zinc-300 transition-all">
+                    <div class="flex justify-between items-start">
+                        <div class="w-8 h-8 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-600">
+                            <iconify-icon icon="solar:user-linear" width="16" stroke-width="1.5"></iconify-icon>
+                        </div>
+                        <iconify-icon icon="solar:arrow-right-up-linear" class="text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity" width="18"></iconify-icon>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 mb-1">Personal</p>
+                        <p class="text-lg font-medium tracking-tight text-zinc-900">Rp 3.2jt</p>
+                        <div class="w-full bg-zinc-100 h-1 rounded-full mt-3 overflow-hidden">
+                            <div class="bg-zinc-300 h-full rounded-full" style="width: 40%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Transactions -->
+        <section class="px-6">
+            <h2 class="text-sm font-medium tracking-tight text-zinc-900 mb-4">Recent Invoices</h2>
+            
+            <div id="invoice-list" class="flex flex-col gap-0">
+                <!-- Javascript will populate this -->
+                <!-- Static Item for design reference -->
+                <div class="group flex items-center justify-between py-4 border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50 -mx-2 px-2 rounded-xl transition-colors cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-200/50 flex items-center justify-center text-zinc-500">
+                            <iconify-icon icon="solar:monitor-camera-linear" width="20" stroke-width="1.5"></iconify-icon>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-zinc-900">Adobe Creative Cloud</span>
+                            <span class="text-xs text-zinc-500 font-light flex items-center gap-1">
+                                Business <span class="w-0.5 h-0.5 rounded-full bg-zinc-300"></span> Software
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-sm font-medium text-zinc-900 tabular-nums">Rp 890.000</span>
+                        <span class="text-xs text-zinc-400 font-light">Today</span>
+                    </div>
+                </div>
+
+                <div class="group flex items-center justify-between py-4 border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50 -mx-2 px-2 rounded-xl transition-colors cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-200/50 flex items-center justify-center text-zinc-500">
+                            <iconify-icon icon="solar:cup-linear" width="20" stroke-width="1.5"></iconify-icon>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-zinc-900">Kopi Kenangan</span>
+                            <span class="text-xs text-zinc-500 font-light flex items-center gap-1">
+                                Personal <span class="w-0.5 h-0.5 rounded-full bg-zinc-300"></span> F&amp;B
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-sm font-medium text-zinc-900 tabular-nums">Rp 24.000</span>
+                        <span class="text-xs text-zinc-400 font-light">Yesterday</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200/80 px-6 py-4 pb-6 flex justify-between items-center z-40 backdrop-blur-xl">
+        <a href="#" class="flex flex-col items-center gap-1 text-zinc-900">
+            <iconify-icon icon="solar:home-smile-linear" width="24" stroke-width="1.5"></iconify-icon>
+            <span class="text-[10px] font-medium">Home</span>
+        </a>
+        <a href="#" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-zinc-600">
+            <iconify-icon icon="solar:pie-chart-2-linear" width="24" stroke-width="1.5"></iconify-icon>
+            <span class="text-[10px] font-medium">Report</span>
+        </a>
+        <div class="w-12"></div> <!-- Spacer for FAB if needed, currently kept minimal -->
+        <a href="#" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-zinc-600">
+            <iconify-icon icon="solar:wallet-linear" width="24" stroke-width="1.5"></iconify-icon>
+            <span class="text-[10px] font-medium">Pockets</span>
+        </a>
+        <a href="#" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-zinc-600">
+            <iconify-icon icon="solar:user-circle-linear" width="24" stroke-width="1.5"></iconify-icon>
+            <span class="text-[10px] font-medium">Profile</span>
+        </a>
+        
+        <!-- Center Floating Action (Visual Only) -->
+        <div class="absolute left-1/2 -translate-x-1/2 -top-6">
+            <button onclick="document.getElementById('nl-input').focus()" class="w-14 h-14 bg-zinc-900 rounded-full text-white shadow-float flex items-center justify-center hover:scale-105 active:scale-95 transition-transform border-4 border-zinc-50">
+                <iconify-icon icon="solar:add-linear" width="28" stroke-width="1.5"></iconify-icon>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Scanning Overlay (Simulated) -->
+    <div id="ocr-overlay" class="fixed inset-0 bg-white/95 backdrop-blur-xl z-50 hidden flex-col items-center justify-center p-8 text-center opacity-0 transition-opacity duration-300">
+        <div class="w-20 h-20 bg-zinc-100 rounded-full flex items-center justify-center mb-6 relative overflow-hidden">
+            <div class="absolute inset-0 loading-shimmer"></div>
+            <iconify-icon icon="solar:scanner-linear" class="text-zinc-400 relative z-10" width="32" stroke-width="1.5"></iconify-icon>
+        </div>
+        <h3 class="text-lg font-medium tracking-tight mb-2">Analyzing Receipt</h3>
+        <p class="text-sm text-zinc-500 font-light max-w-xs mx-auto">Extracting merchant, date, and line items using AI...</p>
+    </div>
+
+    <!-- Javascript Logic -->
+    <script>
+        // Store
+        const state = {
+            invoices: [
+                { id: 1, title: 'Adobe Creative Cloud', amount: 890000, pocket: 'Business', category: 'Software', date: 'Today', icon: 'solar:monitor-camera-linear' },
+                { id: 2, title: 'Kopi Kenangan', amount: 24000, pocket: 'Personal', category: 'F&B', date: 'Yesterday', icon: 'solar:cup-linear' },
+                { id: 3, title: 'Tokopedia - Paper', amount: 145000, pocket: 'Business', category: 'Supplies', date: 'Yesterday', icon: 'solar:box-linear' },
+                { id: 4, title: 'Shell V-Power', amount: 450000, pocket: 'Personal', category: 'Transport', date: '2 Oct', icon: 'solar:fuel-linear' }
+            ]
+        };
+
+        // Format Currency IDR
+        const formatIDR = (amount) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount).replace('Rp', 'Rp ');
+        };
+
+        // Render Invoices
+        const renderList = () => {
+            const container = document.getElementById('invoice-list');
+            container.innerHTML = '';
+            
+            let total = 0;
+
+            state.invoices.forEach(inv => {
+                total += inv.amount;
+                const html = `
+                <div class="group flex items-center justify-between py-4 border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50 -mx-2 px-2 rounded-xl transition-colors cursor-pointer animate-[fadeIn_0.3s_ease-out]">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-200/50 flex items-center justify-center text-zinc-500">
+                            <iconify-icon icon="${inv.icon}" width="20" stroke-width="1.5"></iconify-icon>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-zinc-900">${inv.title}</span>
+                            <span class="text-xs text-zinc-500 font-light flex items-center gap-1">
+                                ${inv.pocket} <span class="w-0.5 h-0.5 rounded-full bg-zinc-300"></span> ${inv.category}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-sm font-medium text-zinc-900 tabular-nums">${formatIDR(inv.amount)}</span>
+                        <span class="text-xs text-zinc-400 font-light">${inv.date}</span>
+                    </div>
+                </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            // Update Total Header (Mock calculation based on static start + list)
+            // In a real app, this would recalculate strictly from DB
+            document.getElementById('total-spend').innerText = new Intl.NumberFormat('id-ID').format(total + 6941000); 
+        };
+
+        // Input Handling
+        const input = document.getElementById('nl-input');
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && input.value.trim() !== '') {
+                // Mock parsing: Check for "Business" or default to Personal
+                const text = input.value;
+                const isBusiness = text.toLowerCase().includes('business') || text.toLowerCase().includes('office');
+                
+                // Mock Amount extraction (finding numbers)
+                const numbers = text.match(/\d+/g);
+                const amount = numbers ? parseInt(numbers.join('')) : 50000; // Default or parsed
+                
+                // Add new invoice
+                const newInv = {
+                    id: Date.now(),
+                    title: text.replace(/[0-9]/g, '').replace('Rp', '').split('for')[0].trim() || 'New Purchase',
+                    amount: amount,
+                    pocket: isBusiness ? 'Business' : 'Personal',
+                    category: 'Uncategorized',
+                    date: 'Just now',
+                    icon: 'solar:bag-3-linear'
+                };
+                
+                state.invoices.unshift(newInv);
+                renderList();
+                input.value = '';
+                input.blur();
+            }
+        });
+
+        // Simulating Camera/OCR
+        const triggerFileInput = () => document.getElementById('receipt-upload').click();
+
+        const handleFileUpload = (input) => {
+            if (input.files && input.files[0]) {
+                const overlay = document.getElementById('ocr-overlay');
+                overlay.classList.remove('hidden');
+                // Force reflow
+                void overlay.offsetWidth; 
+                overlay.classList.remove('opacity-0');
+
+                // Simulate API delay
+                setTimeout(() => {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        
+                        // Add mocked OCR result
+                        const ocrInv = {
+                            id: Date.now(),
+                            title: 'Grand Lucky SCBD',
+                            amount: 1250000,
+                            pocket: 'Personal',
+                            category: 'Groceries',
+                            date: 'Just now',
+                            icon: 'solar:cart-large-linear'
+                        };
+                        state.invoices.unshift(ocrInv);
+                        renderList();
+
+                    }, 300);
+                }, 2000);
+            }
+        };
+
+        // Initial Render
+        renderList();
+
+    </script>
+
+</body></html>
