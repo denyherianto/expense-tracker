@@ -4,13 +4,21 @@ A personal finance tracking application built with Next.js, featuring AI-powered
 
 ## Features
 
-- Track income and expenses
-- AI-powered invoice parsing (via OpenAI)
+- Track expenses
+- AI-powered invoice parsing (via OpenAI) using Voice or Camera
 - Google OAuth authentication
 - Monthly financial reports with charts
 - PWA support for mobile devices
-- Dark/light theme support
-- Pocket sharing
+- Pocket sharing to other users
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="200" alt="Home">
+  <img src="docs/screenshots/add.png" width="200" alt="Add Transaction">
+  <img src="docs/screenshots/detail.png" width="200" alt="Transaction Detail">
+  <img src="docs/screenshots/analysis.png" width="200" alt="Analysis">
+</p>
 
 ## Tech Stack
 
