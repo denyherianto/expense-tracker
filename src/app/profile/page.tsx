@@ -1,15 +1,15 @@
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { db } from '@/db';
-import { invoices, items } from '@/db/schema';
+import { invoices, items, user } from '@/db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
-import { formatIDR } from '@/lib/utils';
+import { formatCurrency, CurrencyCode, DEFAULT_CURRENCY } from '@/lib/currency';
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogoutButton } from '@/components/LogoutButton';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, CreditCard, Receipt } from 'lucide-react';
+import { ArrowLeft, Calendar, CreditCard, Receipt, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 async function getUserStats(userId: string) {
@@ -31,10 +31,16 @@ async function getUserStats(userId: string) {
         LIMIT 1
     `);
 
+    const [userData] = await db
+        .select({ currency: user.currency })
+        .from(user)
+        .where(eq(user.id, userId));
+
     return {
         totalSpend: Number(totalSpendResult?.value || 0),
         invoiceCount: Number(totalInvoices[0]?.count || 0),
         topCategory: topCategoryResult.rows[0] ? (topCategoryResult.rows[0] as { category: string }).category : 'None yet',
+        currency: (userData?.currency as CurrencyCode) || DEFAULT_CURRENCY,
     };
 }
 
@@ -81,7 +87,7 @@ export default async function ProfilePage() {
                             <CreditCard className="h-4 w-4 text-zinc-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-medium tracking-tight text-zinc-900">{formatIDR(stats.totalSpend)}</div>
+                            <div className="text-2xl font-medium tracking-tight text-zinc-900">{formatCurrency(stats.totalSpend, stats.currency)}</div>
                             <p className="text-xs text-zinc-400">Lifetime</p>
                         </CardContent>
                     </Card>
@@ -105,6 +111,13 @@ export default async function ProfilePage() {
                         </Card>
                     </div>
                 </div>
+
+                <Link href="/settings" className="block mb-4">
+                    <Button variant="outline" className="w-full rounded-xl border-zinc-200 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                    </Button>
+                </Link>
 
                 <LogoutButton />
             </section>

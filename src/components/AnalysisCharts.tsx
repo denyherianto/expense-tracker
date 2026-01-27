@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const COLORS = ['#18181b', '#3f3f46', '#52525b', '#71717a', '#a1a1aa', '#d4d4d8', '#e4e4e7'];
 
@@ -12,6 +13,7 @@ interface ChartData {
 }
 
 export function AnalysisCharts({ data }: { data: ChartData }) {
+    const { formatCurrency, symbol, currency } = useCurrency();
     return (
         <div className="space-y-4">
             <Card className="border-zinc-200/60 shadow-subtle rounded-2xl">
@@ -35,10 +37,10 @@ export function AnalysisCharts({ data }: { data: ChartData }) {
                                     fontSize={12}
                                     tickLine={false}
                                     axisLine={false}
-                                    tickFormatter={(value) => `Rp${value / 1000}k`}
+                                    tickFormatter={(value) => `${symbol}${value / 1000}k`}
                                 />
                                 <Tooltip
-                                    formatter={(value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(value ?? 0))}
+                                    formatter={(value) => formatCurrency(Number(value ?? 0))}
                                     cursor={{ fill: 'transparent' }}
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e4e4e7' }}
                                 />
@@ -72,7 +74,7 @@ export function AnalysisCharts({ data }: { data: ChartData }) {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(value ?? 0))}
+                                    formatter={(value) => formatCurrency(Number(value ?? 0))}
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e4e4e7' }}
                                 />
                             </PieChart>
@@ -106,7 +108,7 @@ export function AnalysisCharts({ data }: { data: ChartData }) {
                                     <div className="font-medium truncate text-sm text-zinc-900">{item.name}</div>
                                 </div>
                                 <div className="text-sm font-medium text-zinc-900 whitespace-nowrap">
-                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.value)}
+                                    {formatCurrency(item.value)}
                                 </div>
                             </div>
                         ))}

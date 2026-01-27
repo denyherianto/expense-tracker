@@ -1,7 +1,7 @@
 import { db } from '@/db';
-import { invoices } from '@/db/schema';
+import { invoices, user } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { formatIDR } from '@/lib/utils';
+import { formatCurrency, CurrencyCode, DEFAULT_CURRENCY } from '@/lib/currency';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { notFound } from 'next/navigation';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 import { ArrowLeft } from 'lucide-react';
 import { DeleteInvoiceButton } from '@/components/DeleteInvoiceButton';
@@ -19,6 +21,20 @@ export default async function InvoiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: invoiceId } = await params;
+
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  let currency: CurrencyCode = DEFAULT_CURRENCY;
+  if (session) {
+    const [userData] = await db
+      .select({ currency: user.currency })
+      .from(user)
+      .where(eq(user.id, session.user.id));
+    currency = (userData?.currency as CurrencyCode) || DEFAULT_CURRENCY;
+  }
+
   const invoice = await db.query.invoices.findFirst({
     where: eq(invoices.id, invoiceId),
     with: { items: true, pocket: true },
@@ -44,7 +60,7 @@ export default async function InvoiceDetailPage({
         <Card className="mb-6 border-zinc-200/60 shadow-subtle rounded-2xl">
           <CardHeader>
             <div className="flex justify-between items-start">
-              <CardTitle className="text-2xl font-medium tracking-tight text-zinc-900">{formatIDR(Number(invoice.totalAmount))}</CardTitle>
+              <CardTitle className="text-2xl font-medium tracking-tight text-zinc-900">{formatCurrency(Number(invoice.totalAmount), currency)}</CardTitle>
               <Badge variant="outline" className="border-zinc-200 text-zinc-600 rounded-full">{invoice.pocket?.name}</Badge>
             </div>
             <CardDescription className="text-zinc-500">{format(new Date(invoice.date), 'EEEE, MMMM dd, yyyy, HH:mm')}</CardDescription>
@@ -65,11 +81,11 @@ export default async function InvoiceDetailPage({
                       <TableCell className="align-top">
                         <div className="font-medium text-zinc-900 truncate pr-2" title={item.name}>{item.name}</div>
                         <div className="text-[10px] text-zinc-400 truncate">
-                          {Number(item.quantity)} x {formatIDR(Number(item.unitPrice))} &bull; <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 border-zinc-200 text-zinc-500 rounded-full">{item.category}</Badge>
+                          {Number(item.quantity)} x {formatCurrency(Number(item.unitPrice), currency)} &bull; <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 border-zinc-200 text-zinc-500 rounded-full">{item.category}</Badge>
                         </div>
                       </TableCell>
                       <TableCell className="text-right align-top text-zinc-900 font-medium">
-                        {formatIDR(Number(item.totalPrice))}
+                        {formatCurrency(Number(item.totalPrice), currency)}
                       </TableCell>
                     </TableRow>
                   ))}

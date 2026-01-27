@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { formatIDR, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { getInvoices } from '@/app/actions/getInvoices';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -38,6 +39,7 @@ export function InvoiceList({ initialInvoices, initialHasMore }: InvoiceListProp
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [page, setPage] = useState(2); // Start fetching from page 2
   const [isLoading, setIsLoading] = useState(false);
+  const { formatCurrency } = useCurrency();
 
   const searchParams = useSearchParams();
   const q = searchParams.get('q') || '';
@@ -113,7 +115,7 @@ export function InvoiceList({ initialInvoices, initialHasMore }: InvoiceListProp
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="block text-sm font-medium text-zinc-900 tabular-nums">{formatIDR(Number(invoice.totalAmount))}</span>
+                  <span className="block text-sm font-medium text-zinc-900 tabular-nums">{formatCurrency(Number(invoice.totalAmount))}</span>
                   <span className="text-[10px] text-zinc-400 font-light">{invoice.items.length} item</span>
                 </div>
               </div>

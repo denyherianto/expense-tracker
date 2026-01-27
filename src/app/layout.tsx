@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { getUserSettings } from '@/app/actions/settings';
+import { CurrencyCode } from '@/lib/currency';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -11,11 +14,13 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getUserSettings();
+
   return (
     <html lang="en">
       <head>
@@ -23,7 +28,9 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
       </head>
       <body className={inter.className}>
-        {children}
+        <CurrencyProvider initialCurrency={settings.currency as CurrencyCode}>
+          {children}
+        </CurrencyProvider>
         <Toaster />
       </body>
     </html>

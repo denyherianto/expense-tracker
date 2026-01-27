@@ -1,9 +1,10 @@
 import { db } from '@/db';
-import { invoices } from '@/db/schema';
+import { invoices, user } from '@/db/schema';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { desc, gte, eq, and, sql, or, inArray } from 'drizzle-orm';
-import { formatIDR, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import { formatCurrency, getCurrencySymbol, CurrencyCode, DEFAULT_CURRENCY } from '@/lib/currency';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -18,7 +19,7 @@ async function getDashboardData(pocketId?: string) {
   const session = await auth.api.getSession({
     headers: await headers()
   });
-  if (!session) return { recentInvoices: [], totalMonthSpend: 0, pockets: [], user: null };
+  if (!session) return { recentInvoices: [], totalMonthSpend: 0, pockets: [], user: null, currency: DEFAULT_CURRENCY };
 
   const userId = session.user.id;
 
@@ -26,7 +27,7 @@ async function getDashboardData(pocketId?: string) {
   const availablePockets = await getPockets();
   const accessiblePocketIds = availablePockets.map(p => p.id);
 
-  // Visibility Logic: 
+  // Visibility Logic:
   // 1. Own invoices
   // 2. Invoices in pockets I am a member of
   const visibilityFilter = accessiblePocketIds.length > 0
@@ -41,8 +42,8 @@ async function getDashboardData(pocketId?: string) {
     ? and(eq(invoices.pocketId, pocketId), visibilityFilter)
     : visibilityFilter;
 
-  // Parallel fetching for invoices and stats
-  const [recentInvoices, totalMonthSpendResult] = await Promise.all([
+  // Parallel fetching for invoices, stats and user currency
+  const [recentInvoices, totalMonthSpendResult, userData] = await Promise.all([
     db.query.invoices.findMany({
       limit: 5,
       orderBy: [desc(invoices.date), desc(invoices.createdAt)],
@@ -52,6 +53,9 @@ async function getDashboardData(pocketId?: string) {
     db.select({ value: sql<string>`sum(${invoices.totalAmount})` })
       .from(invoices)
       .where(whereClause),
+    db.select({ currency: user.currency })
+      .from(user)
+      .where(eq(user.id, userId)),
   ]);
 
   return {
@@ -59,6 +63,7 @@ async function getDashboardData(pocketId?: string) {
     totalMonthSpend: Number(totalMonthSpendResult[0]?.value || 0),
     pockets: availablePockets,
     user: session.user,
+    currency: (userData[0]?.currency as CurrencyCode) || DEFAULT_CURRENCY,
   };
 }
 
@@ -68,9 +73,11 @@ export default async function DashboardPage({
   searchParams: Promise<{ pocketId?: string }>;
 }) {
   const params = await searchParams;
-  const { recentInvoices, totalMonthSpend, pockets, user } = await getDashboardData(params.pocketId);
+  const { recentInvoices, totalMonthSpend, pockets, user, currency } = await getDashboardData(params.pocketId);
 
   if (!user) return null; // Should be handled by middleware, but for safety
+
+  const currencySymbol = getCurrencySymbol(currency);
 
   return (
     <div className="max-w-md mx-auto px-6 min-h-screen pb-32 font-sans bg-zinc-50">
@@ -94,9 +101,9 @@ export default async function DashboardPage({
       <section className="py-8">
         <h1 className="text-zinc-500 text-sm font-normal mb-1">Total Expenses</h1>
         <div className="flex items-baseline gap-1">
-          <span className="text-sm text-zinc-400 font-light -translate-y-1">Rp</span>
+          <span className="text-sm text-zinc-400 font-light -translate-y-1">{currencySymbol}</span>
           <span className="text-4xl font-medium tracking-tight text-zinc-900">
-            {new Intl.NumberFormat('id-ID').format(Number(totalMonthSpend))}
+            {new Intl.NumberFormat(currency === 'IDR' ? 'id-ID' : 'en-US').format(Number(totalMonthSpend))}
           </span>
         </div>
       </section>
@@ -138,7 +145,7 @@ export default async function DashboardPage({
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="block text-sm font-medium text-zinc-900 tabular-nums">{formatIDR(Number(invoice.totalAmount))}</span>
+                      <span className="block text-sm font-medium text-zinc-900 tabular-nums">{formatCurrency(Number(invoice.totalAmount), currency)}</span>
                     </div>
                   </div>
                 </Link>
