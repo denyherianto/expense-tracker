@@ -1,15 +1,24 @@
-# Finance Tracker
+# Expense Tracker
 
-A personal finance tracking application built with Next.js, featuring AI-powered invoice parsing, Google OAuth authentication, and beautiful charts for visualizing your financial data.
+An **AI-powered** personal expense tracking application that uses Large Language Models (LLM) to automatically parse and categorize your expenses from text, voice, or receipt photos.
+
+## AI-Powered Features
+
+This app leverages **any OpenAI-compatible LLM** (OpenAI, Azure OpenAI, local models, etc.) to intelligently process your expenses:
+
+- **Natural Language Input** - Type expenses in plain language (e.g., "Lunch at Starbucks Rp85.000") and let AI extract merchant, amount, and category
+- **Voice Recognition** - Speak your expenses and AI transcribes and parses them automatically
+- **Receipt OCR** - Snap a photo of any receipt and AI extracts line items, totals, and categorizes each item
+- **Smart Categorization** - AI automatically assigns categories (Food, Transport, Shopping, etc.) based on context
 
 ## Features
 
-- Track expenses
-- AI-powered invoice parsing (via OpenAI) using Voice or Camera
+- AI-powered expense parsing via text, voice, or camera
+- Automatic item extraction and categorization using LLM
 - Google OAuth authentication
-- Monthly financial reports with charts
+- Monthly financial reports with interactive charts
 - PWA support for mobile devices
-- Pocket sharing to other users
+- Pocket sharing for collaborative expense tracking
 
 ## Screenshots
 
@@ -22,19 +31,19 @@ A personal finance tracking application built with Next.js, featuring AI-powered
 
 ## Tech Stack
 
+- **AI/LLM**: OpenAI-compatible API (GPT, Claude, local models) for natural language processing, receipt OCR, and smart categorization
 - **Framework**: Next.js 16 with App Router
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Better Auth with Google OAuth
 - **Styling**: Tailwind CSS v4
 - **Charts**: Recharts
-- **AI**: OpenAI API for invoice parsing
 
 ## Prerequisites
 
 - Node.js 20+
 - PostgreSQL database
+- **OpenAI-compatible LLM API key** (required for AI-powered expense parsing)
 - Google OAuth credentials (optional, for social login)
-- OpenAI API key (optional, for AI features)
 
 ## Getting Started
 
@@ -70,9 +79,9 @@ Edit `.env.local` with your configuration:
 | `BETTER_AUTH_SECRET` | Yes | Secret key for session signing (generate with `openssl rand -base64 32`) |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret |
-| `OPENAI_API_KEY` | No | OpenAI API key for AI features |
-| `OPENAI_BASE_URL` | No | Custom OpenAI-compatible endpoint |
-| `OPENAI_MODEL` | No | Model to use (defaults to gpt-4) |
+| `OPENAI_API_KEY` | Yes | API key for any OpenAI-compatible LLM provider |
+| `OPENAI_BASE_URL` | No | Custom endpoint URL (for Azure, local models, or alternative providers) |
+| `OPENAI_MODEL` | No | LLM model to use (e.g., gpt-4, gpt-3.5-turbo, or custom model names) |
 
 ### 4. Set up the database
 
